@@ -1,0 +1,41 @@
+/* FormGuard — design tokens, generated from tokens.json */
+:root, [data-theme="light"] {
+  --ground: #F2EDE4;
+  --ground-raised: #FAF7F1;
+  --line: #DCD5C9;
+  --line-strong: #8A8378;
+  --ink: #1B1A17;
+  --ink-muted: #5E584F;
+  --signal: #C62B22;
+  --signal-ink: #C62B22;
+  --on-signal: #F2EDE4;
+}
+[data-theme="dark"] {
+  --ground: #1B1A17;
+  --ground-raised: #24221E;
+  --line: #38352F;
+  --line-strong: #7D776D;
+  --ink: #F2EDE4;
+  --ink-muted: #ADA79D;
+  --signal: #C62B22;
+  --signal-ink: #EC6157;
+  --on-signal: #F2EDE4;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-8: 32px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-full: 999px;
+  --font-display: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+.display { font-family: var(--font-display); font-size: 56px; line-height: 56px; font-weight: 800; letter-spacing: -0.02em; }
+.heading { font-family: var(--font-display); font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -0.01em; }
+.title { font-family: var(--font-display); font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: 0; }
+.body { font-family: var(--font-display); font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: 0; }
+.label { font-family: var(--font-display); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; }
+.reading { font-family: var(--font-mono); font-size: 32px; line-height: 36px; font-weight: 500; letter-spacing: 0; }
+.data { font-family: var(--font-mono); font-size: 13px; line-height: 18px; font-weight: 400; letter-spacing: 0; }
