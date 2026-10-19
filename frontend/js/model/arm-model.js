@@ -1,6 +1,6 @@
 // 3D arm model: bones, muscles, skin, hand and dumbbell, built once when this module loads.
 // The geometry below is the original demo's, moved here unchanged. The functions at the bottom are what the app uses.
-const THREE = window.THREE;
+import * as THREE from 'three';
 
 const D2R = Math.PI / 180;
 const TH_FLOOR = 0;                       // straightest pose the model can take (degrees of elbow flexion)
@@ -63,7 +63,7 @@ const solidSkin = mats.skin = new THREE.MeshPhysicalMaterial({
   clearcoat: 0.05, emissive: 0x000000 });
 const chrome = mats.dumbbell = new THREE.MeshStandardMaterial({ color: '#CDD2D8', metalness: 1, roughness: 0.24, emissive: 0x000000 });
 const knurled = new THREE.MeshStandardMaterial({ color: '#B9BEC4', metalness: 1, roughness: 0.38, bumpMap: knurlTexture(), bumpScale: 0.6 });
-const iron = new THREE.MeshStandardMaterial({ color: '#2D3137', metalness: 0.55, roughness: 0.46 });
+const iron = new THREE.MeshStandardMaterial({ color: '#2A2824', metalness: 0.55, roughness: 0.46 });
 
 // ---------- swept tube geometry ----------
 function curveKeys(keys) {           // cubic Hermite through [t, v1, v2, ...]
@@ -381,7 +381,7 @@ const wristG = new THREE.Group(); fore.add(wristG);
   layerOf.gear[0].parent].forEach(o => wristG.add(o));
 
 // ---------- curl path arrow ----------
-const pathMat = new THREE.MeshBasicMaterial({ color: '#B0342A', transparent: true, opacity: 0.9, toneMapped: false });
+const pathMat = new THREE.MeshBasicMaterial({ color: '#ADA79D', transparent: true, opacity: 0.9, toneMapped: false });
 {
   const R = 3.74, a0 = -58, a1 = 36, step = 8, dash = 5;
   for (let a = a0; a < a1 - 2; a += step) {
@@ -503,7 +503,7 @@ export function applyTheme() {
   const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const rim = new THREE.Color(css('--rim')).convertLinearToSRGB();
   glassMat.uniforms.uColor.value.set(rim.r, rim.g, rim.b);
-  pathMat.color.set(css('--accent'));
+  pathMat.color.set(css('--path'));
 }
 
 /** Bounding box of the arm over its whole range of motion plus the calibration pose, for camera framing. */

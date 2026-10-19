@@ -17,11 +17,11 @@ export function createSelectPage({ stage, model, labels, state, router, estimato
       <div class="setups" role="radiogroup" aria-label="Sensor setup">
         ${SETUPS.map(s => `
           <button type="button" class="setup" role="radio" data-id="${s.id}" aria-checked="false">
-            <span>${s.label}</span>${s.implemented ? '' : '<span class="badge">Not implemented yet</span>'}
+            <span class="dot" aria-hidden="true"></span><span class="name">${s.label}</span>${s.implemented ? '' : '<span class="badge">Not built yet</span>'}
           </button>`).join('')}
       </div>
       <p class="note" id="sel-note" aria-live="polite"></p>
-      <div class="row actions"><button type="button" class="btn primary" id="sel-continue" disabled>Continue</button></div>`;
+      <div class="row actions"><button type="button" class="fg-btn fg-btn-primary" id="sel-continue" disabled>Continue</button></div>`;
 
     root.querySelectorAll('.setup').forEach(btn => btn.addEventListener('click', () => {
       positions = new Set(setupById(btn.dataset.id).positions); refresh();

@@ -16,7 +16,7 @@ export function createCalibratePage({ stage, model, labels, state, router, link,
   function status() {
     if (message) return message;
     if (running) return { text: 'Calibrating: hold the pose', tone: 'wait' };
-    if (link.connecting) return { text: 'Connecting...', tone: 'wait' };
+    if (link.connecting) return { text: 'Connecting…', tone: 'wait' };
     if (!link.connected) return { text: 'Sensor not connected', tone: 'off' };
     if (!hadData) return { text: 'Connected, waiting for data', tone: 'wait' };
     return { text: `Ready. Hold the pose, then press Calibrate (${link.rateHz} Hz)`, tone: 'live' };
@@ -85,12 +85,12 @@ export function createCalibratePage({ stage, model, labels, state, router, link,
         <ul class="steps">${setup.calibrationSteps.map(s => `<li>${s}</li>`).join('')}</ul>
         <div class="row">
           <span class="stat"><i id="cal-dot" data-s="off"></i><span id="cal-text"></span></span>
-          <button type="button" class="btn" id="cal-connect">Connect</button>
+          <button type="button" class="fg-btn fg-btn-quiet" id="cal-connect">Connect</button>
         </div>
         ${SensorLink.supported ? '' : '<p class="note warn">Web Bluetooth is not available. Use Chrome or Edge, served from localhost or https.</p>'}
         <div class="row actions">
-          <button type="button" class="btn ghost" id="cal-back">Back</button>
-          <button type="button" class="btn primary" id="cal-start" disabled>Calibrate</button>
+          <button type="button" class="fg-btn fg-btn-quiet" id="cal-back">Back</button>
+          <button type="button" class="fg-btn fg-btn-primary" id="cal-start" disabled>Calibrate</button>
         </div>`;
       $('#cal-connect', root).addEventListener('click', connectClicked);
       $('#cal-start', root).addEventListener('click', runCalibration);

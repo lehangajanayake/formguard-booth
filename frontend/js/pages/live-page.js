@@ -10,36 +10,39 @@ export function createLivePage({ stage, model, labels, state, router, link, esti
   let latestQ = null;
   const cleanups = [];
 
-  const fmt = deg => Math.round(deg);
+  const fmt = deg => { const n = Math.round(deg); return n < 0 ? `−${-n}` : String(n); };   // true minus sign, never -0
 
   function render() {
     const setup = setupById(state.setupId);
     root.innerHTML = `
       <div class="readouts">
-        <div class="readout"><small>Elbow flexion</small><b><span id="live-elbow">0</span>&deg;</b><em>peak <span id="live-peak">0</span>&deg;</em></div>
-        <div class="readout"><small>Forearm rotation</small><b><span id="live-twist">0</span>&deg;</b><em>0&deg; = palm toward thigh</em></div>
+        <div class="fg-reading"><span class="fg-label">Elbow flexion</span><span><span class="fg-reading-value" id="live-elbow">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">Peak <span id="live-peak">0</span>&deg;</span></div>
+        <div class="fg-reading"><span class="fg-label">Forearm rotation</span><span><span class="fg-reading-value" id="live-twist">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">0&deg; = palm toward thigh</span></div>
       </div>
-      <p class="note">Hold your palm toward your thigh, then press Zero twist. The sensor cannot detect palm direction on its own.</p>
+      <p class="note">The sensor can't tell which way your palm faces. Hold it toward your thigh, then press Zero twist.</p>
       <p class="note warn" id="live-warn" hidden>No data from the sensor.</p>
       <p class="meta" id="live-meta"></p>
-      <div class="row">
+      <div class="row view">
         <div class="seg" role="group" aria-label="Skin">
           <span class="lbl">Skin</span>
           <button type="button" data-skin="glass" aria-pressed="true">Glass</button>
           <button type="button" data-skin="solid" aria-pressed="false">Solid</button>
           <button type="button" data-skin="off" aria-pressed="false">Off</button>
         </div>
-        <button type="button" class="chip" data-layer="muscles" aria-pressed="true"><i></i>Muscles</button>
-        <button type="button" class="chip" data-layer="bones" aria-pressed="true"><i></i>Bones</button>
+        <div class="seg" role="group" aria-label="Layers">
+          <span class="lbl">Show</span>
+          <button type="button" data-layer="muscles" aria-pressed="true">Muscles</button>
+          <button type="button" data-layer="bones" aria-pressed="true">Bones</button>
+        </div>
       </div>
-      <div class="row actions">
-        <button type="button" class="btn ghost" id="live-peak-reset">Reset peak</button>
-        <button type="button" class="btn ghost" id="live-twist-zero" title="Hold your palm toward your thigh first" disabled>Zero twist</button>
-        <button type="button" class="btn ghost" id="live-sensors">Change sensors</button>
-        <button type="button" class="btn" id="live-recal">Recalibrate</button>
+      <div class="grid-actions">
+        <button type="button" class="fg-btn fg-btn-quiet" id="live-peak-reset">Reset peak</button>
+        <button type="button" class="fg-btn fg-btn-quiet" id="live-twist-zero" title="Hold your palm toward your thigh first" disabled>Zero twist</button>
+        <button type="button" class="fg-btn fg-btn-quiet" id="live-sensors">Change sensors</button>
+        <button type="button" class="fg-btn fg-btn-secondary" id="live-recal">Recalibrate</button>
       </div>`;
 
-    $('#live-meta', root).textContent = `${setup.label} - forearm axis ${estimator.axisLabel}`;
+    $('#live-meta', root).textContent = `${setup.label} · forearm axis ${estimator.axisLabel}`;
     root.querySelectorAll('[data-skin]').forEach(btn => btn.addEventListener('click', () => {
       model.setSkinMode(btn.dataset.skin);
       root.querySelectorAll('[data-skin]').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
@@ -67,7 +70,7 @@ export function createLivePage({ stage, model, labels, state, router, link, esti
     $('#live-twist', root).textContent = fmt(angles.twist);
     $('#live-warn', root).hidden = link.msSincePacket() < cfg.staleMs;
     const setup = setupById(state.setupId);
-    $('#live-meta', root).textContent = `${setup.label} - forearm axis ${estimator.axisLabel} - ${link.rateHz} Hz, ${link.lost} lost`;
+    $('#live-meta', root).textContent = `${setup.label} · forearm axis ${estimator.axisLabel} · ${link.rateHz} Hz · ${link.lost} lost`;
   }
 
   return {

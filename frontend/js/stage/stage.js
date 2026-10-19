@@ -1,5 +1,7 @@
 // Renderer, camera, lights, framing and pointer picking. The app adds its own objects to `stage.scene`.
-const THREE = window.THREE;
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 const D2R = Math.PI / 180;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const DEFAULT_DIR = V(0.78, 0.34, 1).normalize();
@@ -25,10 +27,10 @@ export function createStage({ canvas, dock, header }) {
 
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 300);
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.08;
   controls.enablePan = false; controls.rotateSpeed = 0.75; controls.zoomSpeed = 0.8;
 
@@ -73,15 +75,20 @@ export function createStage({ canvas, dock, header }) {
     return Math.max(bw / (tv * rw / h), bh / (tv * rh / h)) + frameSize.z * 0.25;
   }
 
-  /** @param {boolean} resetDir true to return to the default viewing direction */
+  let fitDist = 0, lastRegion = null;
+
+  /** @param {boolean} resetDir true to return to the default viewing direction and zoom */
   function layout(resetDir) {
     const w = innerWidth, h = innerHeight, region = openRegion();
+    lastRegion = region;
     renderer.setSize(w, h, false); camera.aspect = w / h;
     camera.setViewOffset(w, h, Math.round(w / 2 - (region.l + region.r) / 2), Math.round(h / 2 - (region.t + region.b) / 2), w, h);
     camera.updateProjectionMatrix();
     const dir = resetDir ? DEFAULT_DIR.clone() : camera.position.clone().sub(controls.target).normalize();
     const dist = fitDistance(region);
-    camera.position.copy(controls.target).addScaledVector(dir, dist);
+    const zoom = resetDir || !fitDist ? 1 : camera.position.distanceTo(controls.target) / fitDist;   // keep the user's zoom
+    fitDist = dist;
+    camera.position.copy(controls.target).addScaledVector(dir, dist * zoom);
     controls.minDistance = dist * 0.35; controls.maxDistance = dist * 2.2;
     controls.update(); requestRender();
   }
@@ -95,7 +102,9 @@ export function createStage({ canvas, dock, header }) {
   }
 
   window.addEventListener('resize', () => layout(false));
-  if (window.ResizeObserver) new ResizeObserver(() => layout(false)).observe(dock);
+  // The dock changes height whenever its text re-wraps. Only re-frame for real changes (a new page), so the arm doesn't jump.
+  const regionChanged = (a, b) => Math.abs((a.b - a.t) - (b.b - b.t)) > 48 || Math.abs((a.r - a.l) - (b.r - b.l)) > 48;
+  if (window.ResizeObserver) new ResizeObserver(() => { if (!lastRegion || regionChanged(openRegion(), lastRegion)) layout(false); }).observe(dock);
 
   // ---------- pointer: taps (not drags) and hover ----------
   const tapHandlers = new Set(), hoverHandlers = new Set();

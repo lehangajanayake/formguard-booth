@@ -13,7 +13,7 @@ import { createCalibratePage } from './pages/calibrate-page.js';
 import { createLivePage } from './pages/live-page.js';
 import { $ } from './ui/dom.js';
 
-const THREE = window.THREE;
+import * as THREE from 'three';
 THREE.ColorManagement.legacyMode = false;
 
 const loadingMessage = $('#msg');
@@ -27,7 +27,6 @@ try {
 
 stage.scene.add(model.arm, model.plumb);
 model.applyTheme();
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { model.applyTheme(); stage.requestRender(); });
 stage.setFramingBox(model.computeFramingBox());
 
 const link = new SensorLink();

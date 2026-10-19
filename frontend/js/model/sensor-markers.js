@@ -1,7 +1,7 @@
 // Clickable sensor spots on the 3D arm. Hidden until a page shows them.
 import { arm, fore } from './arm-model.js';
 
-const THREE = window.THREE;
+import * as THREE from 'three';
 
 export const MARKER_IDS = ['upper', 'forearm', 'wrist'];
 
@@ -12,9 +12,10 @@ const SPOTS = {
   wrist: { parent: fore, position: [0.0, -2.45, 0.37] },
 };
 
-const IDLE = new THREE.Color('#8A929C');
-const SELECTED = new THREE.Color('#B0342A');
-const HOVER = new THREE.Color('#5A4A3E');
+// Brand neutrals: a selected (tracked) spot is Chalk, never red, because red only marks a fault.
+const IDLE = new THREE.Color('#7D776D');
+const SELECTED = new THREE.Color('#F2EDE4');
+const HOVER = new THREE.Color('#5E584F');
 
 const markers = {};
 for (const id of MARKER_IDS) {
@@ -39,9 +40,9 @@ export function setMarkersVisible(ids) {
 /** @param {'idle'|'hover'|'selected'} state */
 export function setMarkerState(id, state) {
   const m = markers[id].material;
-  m.color.copy(state === 'selected' ? new THREE.Color('#E7E2DA') : IDLE);
+  m.color.copy(state === 'selected' ? SELECTED : IDLE);
   m.emissive.copy(state === 'selected' ? SELECTED : state === 'hover' ? HOVER : new THREE.Color(0x000000));
-  m.emissiveIntensity = state === 'selected' ? 0.9 : 1;
+  m.emissiveIntensity = state === 'selected' ? 0.35 : 1;
 }
 
 /** Hit targets for the markers that are currently visible. */

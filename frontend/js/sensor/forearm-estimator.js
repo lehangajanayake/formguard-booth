@@ -1,6 +1,6 @@
 // Turns the board's orientation quaternion into elbow flexion and forearm twist, relative to a straight-arm calibration pose.
 // Assumes the upper arm hangs vertical, so shoulder swing is read as elbow flexion. Orientation is body-to-world.
-const THREE = window.THREE;
+import * as THREE from 'three';
 const D2R = Math.PI / 180;
 
 const AXES = { '+x': [1, 0, 0], '-x': [-1, 0, 0], '+y': [0, 1, 0], '-y': [0, -1, 0], '+z': [0, 0, 1], '-z': [0, 0, -1] };

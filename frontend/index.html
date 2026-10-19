@@ -1,44 +1,42 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FormGuard live arm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="FormGuard-design-system/logos/formguard-favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="FormGuard-design-system/logos/formguard-apple-touch-icon.svg">
+<meta name="theme-color" content="#1B1A17">
+<link rel="stylesheet" href="FormGuard-design-system/tokens.css">
+<link rel="stylesheet" href="FormGuard-design-system/components/bundle.css">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 <div id="stage">
   <canvas id="c" aria-label="3D model of an arm. Drag to rotate, pinch or scroll to zoom."></canvas>
   <div id="labels" aria-hidden="true"></div>
-  <div id="msg">Building the arm...</div>
+  <div id="msg">Building the arm…</div>
 </div>
 
 <header id="header">
+  <img class="logo" src="FormGuard-design-system/logos/formguard-lockup-reversed.svg" alt="FormGuard" height="24">
   <h1 id="page-title"></h1>
   <p id="page-sub"></p>
 </header>
 
 <div id="dock">
   <ol id="stepper" aria-label="Steps">
-    <li data-step="select">1 Sensors</li>
-    <li data-step="calibrate">2 Calibrate</li>
-    <li data-step="live">3 Live</li>
+    <li data-step="select"><b>1</b>Sensors</li>
+    <li data-step="calibrate"><b>2</b>Calibrate</li>
+    <li data-step="live"><b>3</b>Live</li>
   </ol>
   <div id="page"></div>
 </div>
 
-<script src="../sensor-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
-<script>
-  if (!window.THREE || !THREE.OrbitControls) {
-    document.getElementById('msg').textContent = 'The 3D engine did not load. Check your connection and reload the page.';
-  }
-</script>
+<script src="/sensor-config.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

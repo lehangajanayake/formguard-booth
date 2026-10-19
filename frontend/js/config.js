@@ -1,4 +1,4 @@
-// Settings come from ../sensor-config.js (a classic script loaded before the app). Anything missing falls back here.
+// Settings come from public/sensor-config.js (a classic script loaded before the app). Anything missing falls back here.
 export const CFG = Object.assign({
   forearmAxis: 'auto',   // board axis along the forearm toward the hand: 'auto' or '+x' ... '-z'
   smoothing: 0.35,       // 0..1, lower is smoother but laggier
