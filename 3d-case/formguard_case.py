@@ -71,7 +71,8 @@ PCB_X1 = PCB_X0 + PCB_L
 LED_WIN = (PCB_X0 - 0.1, PCB_X0 + 3.6, 4.6, 6.9)     # x0, x1, y0, y1 over CHG + USR LEDs
 RESET_XY = (PCB_X0 + 1.88, -5.72)
 RESET_D = 1.8
-RIB_W, RIB_Y_IN = 1.3, 7.6                            # lid clamp ribs over the pin rows
+RIB_W, RIB_Y_IN = 1.9, 7.0                            # lid clamp ribs over the pin rows (4-5 FDM lines)
+RIB_X_INSET = (0.5, 1.5)                              # ends: USB end, far end (clears a 0402 cap)
 
 # RF shield can (flat metal top) - the lid pad tapes to it
 SHIELD_X = (PCB_X0 + 6.96, PCB_X0 + 17.56)
@@ -147,7 +148,8 @@ def make_lid():
     # clamp ribs pressing the PCB onto the deck ledge, along both pin rows
     for sgn in (-1, 1):
         y0, y1 = sorted((sgn * RIB_Y_IN, sgn * (RIB_Y_IN + RIB_W)))
-        s = s.fuse(box(PCB_X0 + 0.5, PCB_X1 - 0.5, y0, y1, PCB_Z + PCB_T, LID_Z + 0.01))
+        s = s.fuse(box(PCB_X0 + RIB_X_INSET[0], PCB_X1 - RIB_X_INSET[1], y0, y1,
+                       PCB_Z + PCB_T, LID_Z + 0.01))
     # tape pad over the RF shield: tape sticks to the pad, the board sticks to the tape
     pad_z = PCB_Z + SHIELD_TOP + TAPE_T - TAPE_SQUEEZE
     s = s.fuse(box(SHIELD_X[0] + PAD_INSET, SHIELD_X[1] - PAD_INSET,
