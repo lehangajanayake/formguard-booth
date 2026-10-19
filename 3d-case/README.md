@@ -20,6 +20,7 @@ It has three stacked parts, uses standard M2 screws, and is designed for FDM pri
 | 4 | M2 x 10 button-head screw, ISO 7380 | A pan head (ISO 14583 / DIN 7985) also fits in the 4.2 mm counterbore |
 | 4 | M2 brass heat-set insert, about 3.5 OD x 3 long | The hole is 3.2 mm diameter, 4.5 mm deep |
 | 1 | 1 mm foam tape, about 38 x 25 | Under or on top of the battery so it can't rattle |
+| 1 | 1 mm double-sided foam tape, about 9.6 x 11.6 | On the lid pad; holds the board's RF shield (e.g. 3M 4026 or generic foam mounting tape) |
 
 ## Print settings (for the print service)
 
@@ -35,16 +36,17 @@ It has three stacked parts, uses standard M2 screws, and is designed for FDM pri
 3. Put the deck on the base. Feed the battery leads up through the rectangular opening in the deck floor.
 4. Solder the leads to the BAT+ and GND pads on the underside of the XIAO. The board's underside is open to the opening, so the joints have room.
 5. Drop the board, components up, into the deck pocket with the USB-C toward the slot in the end wall. It rests on a 1 mm ledge around its edges.
-6. Put the lid on and fit the 4 screws. The ribs on the lid press the board's pin rows onto the ledge, so the board (and the IMU) can't shift.
+6. Stick the double-sided tape on the rectangular pad on the underside of the lid, then peel the backing.
+7. Put the lid on and fit the 4 screws. The tape bonds to the board's metal RF shield and is squeezed 0.2 mm, while the lid ribs hold the pin rows on the ledge. The board (and the IMU) can't shift in any direction.
 
-**To take the board out:** remove the 4 screws and lift off the lid, then lift the board out of the pocket. The battery stays attached by its leads.
+**To take the board out:** remove the 4 screws and lift off the lid. The board comes up with it, stuck to the tape; peel it off the shield. The battery stays attached by its leads. Use fresh tape when you reassemble.
 
 ## Features
 
 - **USB-C:** a slot in the end wall, with the receptacle face 0.2 mm inside the outer surface so a normal cable seats fully. You can charge and flash without opening the case.
 - **LEDs:** a 3.7 x 2.3 mm window above the CHG (red) and USR (RGB) LEDs.
 - **Reset:** a 1.8 mm hole above the reset button, for a paperclip (for example, to double-tap into the bootloader).
-- **Board mount:** the PCB is located on all four sides by the pocket and clamped between the deck ledge and the lid ribs. No glue or screws go through the board.
+- **Board mount:** the PCB is located on all four sides by the pocket, clamped between the deck ledge and the lid ribs, and taped to a pad on the lid over the RF shield. If your tape isn't 1 mm thick, set `TAPE_T` in the script and re-export.
 
 ## Changing the design
 

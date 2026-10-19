@@ -72,6 +72,14 @@ RESET_XY = (PCB_X0 + 1.88, -5.72)
 RESET_D = 1.8
 RIB_W, RIB_Y_IN = 1.3, 7.6                            # lid clamp ribs over the pin rows
 
+# RF shield can (flat metal top) - the lid pad tapes to it
+SHIELD_X = (PCB_X0 + 6.96, PCB_X0 + 17.56)
+SHIELD_HW = 6.3                                       # half width
+SHIELD_TOP = 3.25                                     # above PCB bottom
+TAPE_T = 1.0                                          # double-sided foam tape thickness
+TAPE_SQUEEZE = 0.2                                    # how much the lid compresses it
+PAD_INSET = 0.5                                       # pad edge inside the shield edge
+
 
 # ---------------------------------------------------------------- helpers
 def rbox(l, w, h, r, cx=0.0, cy=0.0, z=0.0):
@@ -141,6 +149,10 @@ def make_lid():
     for sgn in (-1, 1):
         y0, y1 = sorted((sgn * RIB_Y_IN, sgn * (RIB_Y_IN + RIB_W)))
         s = s.fuse(box(PCB_X0 + 0.5, PCB_X1 - 0.5, y0, y1, PCB_Z + PCB_T, LID_Z + 0.01))
+    # tape pad over the RF shield: tape sticks to the pad, the board sticks to the tape
+    pad_z = PCB_Z + SHIELD_TOP + TAPE_T - TAPE_SQUEEZE
+    s = s.fuse(box(SHIELD_X[0] + PAD_INSET, SHIELD_X[1] - PAD_INSET,
+                   -SHIELD_HW + PAD_INSET, SHIELD_HW - PAD_INSET, pad_z, LID_Z + 0.01))
     for x, y in screw_points():
         s = s.cut(cyl(CLEAR_D, LID_Z - 1, top + 1, x, y))
         s = s.cut(cyl(CBORE_D, top - CBORE_DEPTH, top + 1, x, y))
