@@ -179,10 +179,6 @@ def place_xiao(doc):
     for o in roots:
         if hasattr(o, "Placement"):
             o.Placement = App.Placement(m).multiply(o.Placement)
-    # the STEP ships with a stray second USB-C model that floats off the board; hide it
-    for o in new:
-        if o.TypeId == "App::Part" and o.Label == "USB TYPE C PORT (1)" and App.GuiUp:
-            o.ViewObject.Visibility = False
     return new
 
 
