@@ -4,11 +4,13 @@ Run inside FreeCAD (GUI or freecadcmd):
     exec(open("/path/to/3d-case/formguard_case.py").read())
 
 Parts, bottom to top:
-  Base - battery tray with 4x M2 heat-set inserts
+  Base - battery tray; 4 screws come up through it into the deck
   Deck - frame with a fitted pocket for the XIAO; its floor keeps the battery down
-  Lid  - clamps the board onto the deck ledge with ribs; LED window + reset hole
+  Lid  - clamps the board onto the deck ledge with ribs; LED window + reset hole;
+         4 screws go down through it into the deck
 
-Hardware: 4x M2x10 ISO 7380 button-head screws, 4x M2 heat-set inserts (OD ~3.5, L 3).
+Hardware: 8x M2x8 machine screws (button, pan or socket head) that thread straight
+into printed pilot holes in the deck. No inserts or nuts.
 Source dimensions are in reference/README.md.
 
 Frame: origin at the centre of the case footprint, Z up, base bottom at z = 0.
@@ -54,12 +56,16 @@ LID_T = 2.4
 LEDGE = 1.0                                      # deck ledge under the PCB edges
 POCKET_WALL = 1.6
 
-# screws / inserts
-SCREW_X, SCREW_Y = 21.5, 15.0
-INSERT_D, INSERT_DEPTH = 3.2, 4.5
-SCREW_RELIEF_D, SCREW_RELIEF_DEPTH = 2.0, 1.5
+# screws: all M2x8, threading into pilot holes in the deck
+SCREW_L = 8.0
+PILOT_D = 1.7                                    # M2 self-threading into PLA/PETG
 CLEAR_D = 2.4
-CBORE_D, CBORE_DEPTH = 4.2, 1.2                  # ISO 7380 M2 head: d 3.5, k 1.1
+HEAD_D = 4.4                                     # lid counterbore: ISO 7380 (3.5), DIN 912 (3.8), DIN 7985 (4.0)
+BASE_HEAD_D = 4.2                                # base recess, kept smaller: corner wall to the battery cavity
+SCREW_X, SCREW_Y = 21.5, 15.0                    # bottom screws (base -> deck), corners
+LID_SCREW_X, LID_SCREW_Y = 10.0, 15.3            # top screws (lid -> deck), long sides
+DECK_ENGAGE = 4.0                                # thread length of the bottom screws in the deck
+LID_CBORE_DEPTH = 1.2
 
 # board placement: USB end toward -X
 USB_FACE_X = -OUT_L / 2 + USB_FACE_INSET
@@ -103,6 +109,10 @@ def screw_points():
     return [(sx * SCREW_X, sy * SCREW_Y) for sx in (-1, 1) for sy in (-1, 1)]
 
 
+def lid_screw_points():
+    return [(sx * LID_SCREW_X, sy * LID_SCREW_Y) for sx in (-1, 1) for sy in (-1, 1)]
+
+
 def outline(z0, z1):
     return rbox(OUT_L, OUT_W, z1 - z0, OUT_R, z=z0)
 
@@ -111,10 +121,15 @@ def outline(z0, z1):
 def make_base():
     s = outline(0, BASE_TOP)
     s = s.cut(rbox(CAV_L, CAV_W, CAV_H + 1, CAV_R, z=FLOOR))
+    # bottom screws: head recessed into the underside so 4 mm of thread reaches the deck
+    head_z = BASE_TOP - (SCREW_L - DECK_ENGAGE)
     for x, y in screw_points():
-        s = s.cut(cyl(INSERT_D, BASE_TOP - INSERT_DEPTH, BASE_TOP + 1, x, y))
-        s = s.cut(cyl(SCREW_RELIEF_D, BASE_TOP - INSERT_DEPTH - SCREW_RELIEF_DEPTH,
-                      BASE_TOP - INSERT_DEPTH + 0.01, x, y))
+        s = s.cut(cyl(BASE_HEAD_D, -1, head_z, x, y))
+        s = s.cut(cyl(CLEAR_D, head_z - 0.01, BASE_TOP + 1, x, y))
+    # clearance for the tips of the lid screws, which pass through the deck
+    lid_tip_z = LID_Z + LID_T - LID_CBORE_DEPTH - SCREW_L
+    for x, y in lid_screw_points():
+        s = s.cut(cyl(CLEAR_D, lid_tip_z - 0.5, BASE_TOP + 1, x, y))
     return s.removeSplitter()
 
 
@@ -126,7 +141,7 @@ def make_deck():
     # lighten: hollow everything above the deck floor except the outer wall,
     # the walls around the board pocket and the screw columns
     keep = box(-OUT_L / 2, px1 + POCKET_WALL, -py - POCKET_WALL, py + POCKET_WALL, PCB_Z, LID_Z)
-    for x, y in screw_points():
+    for x, y in screw_points() + lid_screw_points():
         keep = keep.fuse(cyl(CLEAR_D + 2 * 1.4, PCB_Z, LID_Z, x, y))
     hollow = rbox(OUT_L - 2 * WALL, OUT_W - 2 * WALL, LID_Z - PCB_Z + 1, OUT_R - WALL, z=PCB_Z)
     s = s.cut(hollow.cut(keep))
@@ -137,8 +152,11 @@ def make_deck():
     # USB-C slot through the end wall, open to the lid
     uw = USB_W / 2 + 0.45
     s = s.cut(box(-OUT_L / 2 - 1, px0 + 0.01, -uw, uw, PCB_Z - 0.3, LID_Z + 1))
+    # pilot holes: blind from below for the base screws, through for the lid screws
     for x, y in screw_points():
-        s = s.cut(cyl(CLEAR_D, BASE_TOP - 1, LID_Z + 1, x, y))
+        s = s.cut(cyl(PILOT_D, BASE_TOP - 1, BASE_TOP + DECK_ENGAGE + 0.5, x, y))
+    for x, y in lid_screw_points():
+        s = s.cut(cyl(PILOT_D, BASE_TOP - 1, LID_Z + 1, x, y))
     return s.removeSplitter()
 
 
@@ -153,9 +171,9 @@ def make_lid():
     pad_z = PCB_Z + SHIELD_TOP + TAPE_T - TAPE_SQUEEZE
     s = s.fuse(box(SHIELD_X[0] + PAD_INSET, SHIELD_X[1] - PAD_INSET,
                    -SHIELD_HW + PAD_INSET, SHIELD_HW - PAD_INSET, pad_z, LID_Z + 0.01))
-    for x, y in screw_points():
+    for x, y in lid_screw_points():
         s = s.cut(cyl(CLEAR_D, LID_Z - 1, top + 1, x, y))
-        s = s.cut(cyl(CBORE_D, top - CBORE_DEPTH, top + 1, x, y))
+        s = s.cut(cyl(HEAD_D, top - LID_CBORE_DEPTH, top + 1, x, y))
     x0, x1, y0, y1 = LED_WIN
     s = s.cut(rbox(x1 - x0, y1 - y0, LID_T + 2, 0.9, cx=(x0 + x1) / 2, cy=(y0 + y1) / 2,
                    z=LID_Z - 1))

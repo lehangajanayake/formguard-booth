@@ -12,7 +12,7 @@ A small electronics enclosure, three parts that stack together. **Quantity: 1 se
 
 The STL units are millimetres. The `.step` files are the same parts, in case you prefer to slice from STEP.
 
-The `preview_*.png` images show each part. `preview_assembly.png` shows how they fit together.
+The `preview_*.png` images show each part. `preview_base_underside.png` shows the screw recesses under the base, and `preview_assembly.png` shows how the parts fit together.
 
 ## Settings
 
@@ -22,24 +22,22 @@ The `preview_*.png` images show each part. `preview_assembly.png` shows how they
 | Material | PLA (PETG also fine) |
 | Colour | Any. Black or dark grey preferred |
 | Layer height | 0.2 mm (0.16 mm if convenient) |
-| Walls / perimeters | **3 minimum**: the wall next to each insert hole is only about 1.4 mm |
+| Walls / perimeters | **3 minimum.** Screws thread straight into the plastic, so the walls around the holes need to be solid |
 | Top / bottom layers | 4 / 4 |
 | Infill | 20% or more |
-| Supports | **None.** None are needed in the orientations above |
+| Supports | **None.** None are needed in the orientations above; the screw recesses under the base bridge cleanly |
 | Brim | Optional |
 
 ## Dimensions that must stay accurate
 
 Please don't scale the parts, and avoid horizontal-expansion or hole compensation beyond your usual profile.
 
-- **Base:** 4 holes, 3.2 mm diameter, for M2 heat-set inserts.
+- **Deck:** 8 holes, 1.7 mm diameter. M2 screws thread directly into these, so **please don't drill them out.**
 - **Deck:** a 21.65 x 18.48 mm pocket that the circuit board drops into.
-- **Lid:** 4 holes, 2.4 mm diameter, each with a 4.2 mm counterbore for the screw heads.
+- **Base:** 4 recesses underneath, 4.2 mm diameter, for screw heads.
+- **Lid:** 4 holes, 2.4 mm diameter, each with a 4.4 mm counterbore for the screw heads.
 - **Lid:** a 1.8 mm hole and a 3.7 x 2.3 mm window. If these close up, please clear them; don't fill them in.
-
-## Heat-set inserts (optional)
-
-If you offer this, please install **4 x M2 brass heat-set inserts** (about 3.5 mm OD x 3 mm long) into the 4 holes on the top face of the **base**, flush with the surface. If not, just print the parts and I'll fit the inserts myself.
+- **Base:** the wall between each corner recess and the inner pocket is about 0.85 mm. Please make sure your slicer doesn't drop it.
 
 ## Please don't
 
