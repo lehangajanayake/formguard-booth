@@ -12,7 +12,7 @@ A small electronics enclosure, three parts that stack together. **Quantity: 1 se
 
 The STL units are millimetres. The `.step` files are the same parts, in case you prefer to slice from STEP.
 
-The `preview_*.png` images show each part. `preview_base_underside.png` shows the screw recesses under the base, and `preview_assembly.png` shows how the parts fit together.
+The `preview_*.png` images show each part. `preview_assembly.png` shows how they fit together.
 
 ## Settings
 
@@ -25,19 +25,17 @@ The `preview_*.png` images show each part. `preview_base_underside.png` shows th
 | Walls / perimeters | **3 minimum.** Screws thread straight into the plastic, so the walls around the holes need to be solid |
 | Top / bottom layers | 4 / 4 |
 | Infill | 20% or more |
-| Supports | **None.** None are needed in the orientations above; the screw recesses under the base bridge cleanly |
+| Supports | **None.** None are needed in the orientations above |
 | Brim | Optional |
 
 ## Dimensions that must stay accurate
 
 Please don't scale the parts, and avoid horizontal-expansion or hole compensation beyond your usual profile.
 
-- **Deck:** 8 holes, 1.7 mm diameter. M2 screws thread directly into these, so **please don't drill them out.**
+- **Base:** 4 corner holes, 2.5 mm diameter. M3 screws thread directly into these, so **please don't drill them out.**
+- **Deck and lid:** 4 corner holes each, 3.4 mm diameter, for the screws to pass through.
 - **Deck:** a 21.65 x 18.48 mm pocket that the circuit board drops into.
-- **Base:** 4 recesses underneath, 4.2 mm diameter, for screw heads.
-- **Lid:** 4 holes, 2.4 mm diameter, each with a 4.4 mm counterbore for the screw heads.
 - **Lid:** a 1.8 mm hole and a 3.7 x 2.3 mm window. If these close up, please clear them; don't fill them in.
-- **Base:** the wall between each corner recess and the inner pocket is about 0.85 mm. Please make sure your slicer doesn't drop it.
 
 ## Please don't
 
