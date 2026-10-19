@@ -17,19 +17,19 @@ Wiki page: https://wiki.seeedstudio.com/XIAO_BLE/
 
 ### Measured from the STEP
 
-The STEP is Y-up: +Y is the component side and the PCB bottom is at Y = 0.
+The STEP is Y-up: +Y is the component side; the PCB top is at Y = 1.0 and its bottom at Y = -0.25.
 
 | Feature | Value |
 | --- | --- |
 | PCB outline | 20.95 x 17.78 mm (the wiki says 21 x 17.8) |
-| PCB thickness | 1.0 mm |
-| Tallest part on top | USB-C shell, 3.2 mm above the PCB top (4.2 mm from the PCB bottom) |
+| PCB thickness | 1.25 mm (STEP PCB spans y = -0.25 to 1.0) |
+| Tallest part on top | USB-C shell, 3.2 mm above the PCB top (4.46 mm from the PCB bottom) |
 | RF shield can | 10.6 x 12.6 mm, 2.0 mm above the PCB top |
 | USB-C overhang | 1.5 mm past the short edge of the PCB |
-| USB-C shell | 8.9 wide x 3.2 tall, centred on the board's width |
+| USB-C shell | 8.9 wide x 4.2 tall (STEP y 0.01 to 4.21), centred on the board width; it hangs below the PCB top where it overhangs the edge |
 | Reset button | top side, beside the USB-C on one side, 0.7 mm tall |
 | CHG (red) and USR (RGB) LEDs | top side, beside the USB-C on the side opposite the reset button, about 0.3–3 mm in from the USB end |
-| Underside | flat apart from pads; bottom pads stand about 0.25 mm proud |
+| Underside | flat; no parts on the bottom, only pads |
 
 ### Bottom pads (from `Bottom Key coordinates .xls`, origin at board centre)
 
