@@ -1,4 +1,4 @@
-"""FormGuard sensor case: XIAO nRF52840 Sense + 400 mAh LiPo, 3 stacked parts.
+"""FormGuard sensor case: XIAO nRF52840 Sense + 400 mAh LiPo, 2 parts.
 
 The battery sits beside the board at the end away from the USB-C (toward +X), clear of the
 board. It plugs into a JST PH socket soldered at 45 deg to the battery pads on the board's
@@ -9,17 +9,17 @@ Run inside FreeCAD (GUI or freecadcmd):
     exec(open("/path/to/3d-case/formguard_case.py").read())
 
 Parts, bottom to top:
-  Base - battery tray and connector pit; the screws thread into pilot holes in its corners
-  Deck - frame with a fitted pocket for the XIAO; its floor keeps the battery down
+  Base - the body: battery tray on the floor, connector pit under the board, four fins that
+         the board's corners rest on, USB-C slot; the screws thread into its corners
   Lid  - the board clips to its underside: the USB-C end hooks into a cradle (the hinge),
-         the far end snaps under a flexible latch. Ribs press the board onto the deck ledge
-         when the case is closed. LED window + reset hole.
+         the far end snaps under a flexible latch. When the case is closed, ribs press the
+         board onto the base fins and two more ribs hold the battery down. LED window + reset hole.
 
 Board in: hook the USB-C into the lid's cradle, swing the far end up until the latch clicks.
 Board out: push the latch back, swing the far end down around the USB-C, slide it out.
 
-Hardware: 4x M3x15 screws (button head ISO 7380 sits lowest; M3x16 also fits), down through
-lid and deck and threading straight into the base. No inserts or nuts.
+Hardware: 4x M3x10 screws (button head ISO 7380 sits lowest; M3x12 also fits), down through
+the lid and threading straight into the base. No inserts or nuts.
 Source dimensions are in reference/README.md.
 
 Frame: origin at the centre of the case footprint, Z up, base bottom at z = 0.
@@ -38,7 +38,7 @@ XIAO_STEP = os.path.join(REF, "xiao-nrf52840", "XIAO-nRF52840.step")
 SOCKET_STEP = os.path.join(REF, "jst-ph", "JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical.step")  # KiCad
 PLUG_STEP = os.path.join(REF, "jst-ph", "PHR-2_mated_envelope.step")      # make_reference_models.py
 BATTERY_STEP = os.path.join(REF, "battery-400mah", "battery_400mah.step")  # make_reference_models.py
-SCREW_STEP = os.path.join(REF, "screws", "ISO7380-1_M3x15.step")          # make_reference_models.py
+SCREW_STEP = os.path.join(REF, "screws", "ISO7380-1_M3x10.step")          # make_reference_models.py
 
 # ---------------------------------------------------------------- parameters
 FIT = 0.35          # FDM clearance per side for parts that drop into pockets
@@ -49,7 +49,6 @@ FLOOR = 2.0
 BAT_L, BAT_W, BAT_H = 38.0, 25.0, 6.0
 BAT_ROOM = 1.0
 CAV_L, CAV_W = BAT_L + 2 * BAT_ROOM, BAT_W + 2 * BAT_ROOM      # 40 x 27
-CAV_H = BAT_H + BAT_ROOM                                         # 7
 CAV_R = 2.0
 
 # XIAO (measured from the STEP)
@@ -67,6 +66,10 @@ SOCKET_TILT = 45.0           # deg from straight down, toward +Y
 PAD_GND_XY = (2.54, 4.445)   # socket pin 1
 PAD_BAT_XY = (0.635, 4.445)
 GLUE_X = (1.5, 13.0)         # glue reaching the PCB long edges, measured from the USB end
+# fins under the board corners (board x from the USB end), clear of the glue and the socket,
+# under the outer FIN_IN of each long edge (the STEP has nothing there on the underside)
+FIN_X = ((0.2, 1.3), (PCB_L - 1.3, PCB_L - 0.2))
+FIN_IN = 1.0
 PIT_HW = 12.0                # pit half width; leaves 1.75 mm round the USB-end pilot holes
 BAT_GAP = 1.0                # cell starts this far past the far edge of the PCB (no overlap)
 END_MARGIN = 5.0             # cavity to outer end wall, room for the far screws
@@ -75,21 +78,21 @@ END_MARGIN = 5.0             # cavity to outer end wall, room for the far screws
 OUT_L = USB_FACE_INSET + USB_OVERHANG + PCB_L + BAT_GAP - BAT_ROOM + CAV_L + END_MARGIN  # 67.68
 OUT_W, OUT_R = 37.0, 4.0
 
-# stack heights
-DECK_FLOOR = 1.2
+# heights
 PCB_Z = FLOOR + CONN_DROP + CONN_CLEAR           # 15.0  PCB bottom
-BASE_TOP = PCB_Z - DECK_FLOOR                    # 13.8
-BAT_Z = BASE_TOP - CAV_H                         # 6.8  battery platform: foam + cell reach the deck floor
 LID_Z = PCB_Z + USB_TOP + 0.4                    # 19.86 lid underside
+BASE_TOP = LID_Z                                 # the base is the whole body up to the lid
 LID_T = 2.4
-LEDGE = 1.0                                      # deck ledge under the PCB edges
-POCKET_WALL = 1.6
+BAT_Z = FLOOR                                    # battery on 1 mm foam on the floor
+BAT_TOP = BAT_Z + BAT_ROOM + BAT_H               # 9.0
+BAT_SQUEEZE = 0.3                                # lid ribs compress the foam under the cell this much
+BAT_RIB_Y, BAT_RIB_W, BAT_RIB_INSET = 7.0, 1.6, 4.0  # battery hold-down ribs: centres at +-Y, width, x inset
 
 # screws: 4x M3, heads on top of the lid (an M3 head counterbore would break out of
 # the lid corners), threading into pilot holes in the base corners
 PILOT_D = 2.5                                    # M3 self-threading into PLA/PETG
 CLEAR_D = 3.4
-PILOT_FLOOR = 0.8                                # skin left under the pilot holes; fits up to M3x16
+PILOT_FLOOR = 0.8                                # skin left under the pilot holes
 SCREW_INSET_X, SCREW_Y = 3.5, 15.0               # screw centres from the outer ends; half spacing across
 
 # board placement: USB end toward -X
@@ -103,7 +106,7 @@ CAV_CX = CAV_X0 + CAV_L / 2
 LED_WIN = (PCB_X0 + 0.1, PCB_X0 + 3.6, 4.6, 6.9)     # x0, x1, y0, y1 over CHG + USR LEDs
 RESET_XY = (PCB_X0 + 1.88, -5.72)
 RESET_D = 1.8
-RIB_W, RIB_Y_IN = 1.9, 7.0                            # lid clamp ribs over the pin rows (4-5 FDM lines)
+RIB_W, RIB_Y_IN = 1.9, 7.0                            # lid ribs over the pin rows (4-5 FDM lines)
 RIB_X_INSET = (0.5, 1.5)                              # ends: USB end, far end (clears a 0402 cap)
 
 # USB-C hinge: a cradle on the lid wraps under the shell where it overhangs the PCB. The STEP
@@ -155,44 +158,25 @@ def outline(z0, z1):
 # ---------------------------------------------------------------- parts
 def make_base():
     s = outline(0, BASE_TOP)
-    # battery on a raised platform, so the deck floor holds it down
-    s = s.cut(rbox(CAV_L, CAV_W, CAV_H + 1, CAV_R, cx=CAV_CX, z=BAT_Z))
-    # connector pit under the USB half of the board, down to the floor, open to the battery end
+    # battery tray on the floor, open to the top; the lid ribs hold the cell down
+    s = s.cut(rbox(CAV_L, CAV_W, BASE_TOP, CAV_R, cx=CAV_CX, z=BAT_Z))
+    # connector pit under the board, down to the floor, open to the battery tray
     pit_x0 = -OUT_L / 2 + WALL
     s = s.cut(rbox(CAV_X0 - pit_x0, 2 * PIT_HW, BASE_TOP, CAV_R,
                    cx=(pit_x0 + CAV_X0) / 2, z=FLOOR))
-    for x, y in screw_points():
-        s = s.cut(cyl(PILOT_D, PILOT_FLOOR, BASE_TOP + 1, x, y))
-    return s.removeSplitter()
-
-
-def make_deck():
-    py = PCB_W / 2 + FIT                       # pocket half width
-    px0, px1 = PCB_X0 - FIT, PCB_X1 + FIT      # pocket x range
-
-    s = outline(BASE_TOP, LID_Z)
-    # lighten: hollow everything above the deck floor except the outer wall,
-    # the walls around the board pocket and the screw columns
-    keep = box(-OUT_L / 2, px1 + POCKET_WALL, -py - POCKET_WALL, py + POCKET_WALL, PCB_Z, LID_Z)
-    for x, y in screw_points():
-        keep = keep.fuse(cyl(CLEAR_D + 2 * 1.4, PCB_Z, LID_Z, x, y))
-    hollow = rbox(OUT_L - 2 * WALL, OUT_W - 2 * WALL, LID_Z - PCB_Z + 1, OUT_R - WALL, z=PCB_Z)
-    s = s.cut(hollow.cut(keep))
-    # board pocket and the opening under it (leaves a ledge under the PCB edges)
-    s = s.cut(box(px0, px1, -py, py, PCB_Z, LID_Z + 1))
-    s = s.cut(box(PCB_X0 + LEDGE, PCB_X1 - LEDGE, -PCB_W / 2 + LEDGE, PCB_W / 2 - LEDGE,
-                  BASE_TOP - 1, PCB_Z + 0.01))
-    # no ledge along the long edges where the connector glue reaches them
-    s = s.cut(box(PCB_X0 + GLUE_X[0], PCB_X0 + GLUE_X[1], -py, py, BASE_TOP - 1, PCB_Z + 0.01))
+    # room for the board's USB end, past the pit into the end wall
+    s = s.cut(box(PCB_X0 - FIT, pit_x0 + 1, -PCB_W / 2 - FIT, PCB_W / 2 + FIT, PCB_Z - 0.5,
+                  BASE_TOP + 1))
     # USB-C slot through the end wall, open to the lid, wide and deep enough for the lid's cradle
     hx0, hx1, yi, yo, bz0, bz1 = hinge_dims()
-    s = s.cut(box(-OUT_L / 2 - 1, hx1 + 0.3, -yo - 0.3, yo + 0.3, bz0 - 0.3, LID_Z + 1))
-    # slot for the lid latch through the far pocket wall and the ledge, with room to flex
-    ax0, ax1, tip, zt, zb = latch_dims()
-    s = s.cut(box(tip - 0.3, ax1 + LATCH_ROOM, LATCH_Y - LATCH_W / 2 - 0.4,
-                  LATCH_Y + LATCH_W / 2 + 0.4, BASE_TOP - 1, LID_Z + 1))
+    s = s.cut(box(-OUT_L / 2 - 1, hx1 + 0.3, -yo - 0.3, yo + 0.3, bz0 - 0.3, BASE_TOP + 1))
+    # fins from the floor that the board corners rest on, joined to the pit walls
+    for fx0, fx1 in FIN_X:
+        for sgn in (-1, 1):
+            y0, y1 = sorted((sgn * (PCB_W / 2 - FIN_IN), sgn * (PIT_HW + 0.5)))
+            s = s.fuse(box(PCB_X0 + fx0, PCB_X0 + fx1, y0, y1, FLOOR - 0.01, PCB_Z))
     for x, y in screw_points():
-        s = s.cut(cyl(CLEAR_D, BASE_TOP - 1, LID_Z + 1, x, y))
+        s = s.cut(cyl(PILOT_D, PILOT_FLOOR, BASE_TOP + 1, x, y))
     return s.removeSplitter()
 
 
@@ -215,7 +199,7 @@ def latch_dims():
 def make_lid():
     top = LID_Z + LID_T
     s = outline(LID_Z, top)
-    # clamp ribs pressing the PCB onto the deck ledge, along both pin rows
+    # ribs pressing the PCB onto the base fins, along both pin rows
     for sgn in (-1, 1):
         y0, y1 = sorted((sgn * RIB_Y_IN, sgn * (RIB_Y_IN + RIB_W)))
         s = s.fuse(box(PCB_X0 + RIB_X_INSET[0], PCB_X1 - RIB_X_INSET[1], y0, y1,
@@ -236,6 +220,11 @@ def make_lid():
                                         App.Vector(tip, y0, zt - 0.25), App.Vector(ax0 + 0.01, y0, zb),
                                         App.Vector(ax0 + 0.01, y0, zt)]))
     s = s.fuse(tooth.extrude(App.Vector(0, LATCH_W, 0)))
+    # battery hold-down ribs, pressing the cell into its foam
+    for sgn in (-1, 1):
+        y0, y1 = sorted((sgn * (BAT_RIB_Y - BAT_RIB_W / 2), sgn * (BAT_RIB_Y + BAT_RIB_W / 2)))
+        s = s.fuse(box(CAV_X0 + BAT_RIB_INSET, CAV_X0 + CAV_L - BAT_RIB_INSET, y0, y1,
+                       BAT_TOP - BAT_SQUEEZE, LID_Z + 0.01))
     for x, y in screw_points():
         s = s.cut(cyl(CLEAR_D, LID_Z - 1, top + 1, x, y))
     x0, x1, y0, y1 = LED_WIN
@@ -301,8 +290,9 @@ def place_refs(doc):
     sp = socket_placement()
     refs["Socket"] = add_ref(doc, "Socket_ref", SOCKET_STEP, sp)
     refs["Plug"] = add_ref(doc, "Plug_ref", PLUG_STEP, sp)
+    # battery as it sits with the lid on: its foam squeezed by the lid ribs
     refs["Battery"] = add_ref(doc, "Battery_ref", BATTERY_STEP, App.Placement(
-        App.Vector(CAV_X0 + BAT_ROOM, 0, BAT_Z + BAT_ROOM), App.Rotation()))
+        App.Vector(CAV_X0 + BAT_ROOM, 0, BAT_Z + BAT_ROOM - BAT_SQUEEZE), App.Rotation()))
     for i, (x, y) in enumerate(screw_points()):
         refs[f"Screw{i}"] = add_ref(doc, f"Screw_ref{i}", SCREW_STEP, App.Placement(
             App.Vector(x, y, LID_Z + LID_T), App.Rotation()))
@@ -336,7 +326,7 @@ def build(doc_name="FormGuardCase", with_refs=True, export=True):
     if App.listDocuments().get(doc_name):
         App.closeDocument(doc_name)
     doc = App.newDocument(doc_name)
-    parts = {"Base": make_base(), "Deck": make_deck(), "Lid": make_lid()}
+    parts = {"Base": make_base(), "Lid": make_lid()}
     objs = {}
     for name, shape in parts.items():
         o = doc.addObject("Part::Feature", name)
@@ -349,7 +339,7 @@ def build(doc_name="FormGuardCase", with_refs=True, export=True):
     doc.recompute()
 
     if App.GuiUp:
-        colors = {"Base": (0.25, 0.45, 0.75), "Deck": (0.85, 0.55, 0.2), "Lid": (0.6, 0.6, 0.6),
+        colors = {"Base": (0.25, 0.45, 0.75), "Lid": (0.6, 0.6, 0.6),
                   "Battery_ref": (0.2, 0.2, 0.2), "Socket_ref": (0.95, 0.95, 0.9),
                   "Plug_ref": (0.9, 0.3, 0.3)}
         for n, c in colors.items():

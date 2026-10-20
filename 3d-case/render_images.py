@@ -19,7 +19,7 @@ SIZE = (1600, 1100)
 BACKGROUND = "#F2EDE4"                    # FormGuard Chalk (design system --ground)
 
 # case in dark greys (it prints in black or dark grey PETG), the battery plug in Plate Red
-COLORS = {"Base": (0.27, 0.26, 0.24), "Deck": (0.36, 0.35, 0.32), "Lid": (0.46, 0.44, 0.41),
+COLORS = {"Base": (0.27, 0.26, 0.24), "Lid": (0.46, 0.44, 0.41),
           "Battery": (0.74, 0.73, 0.70), "Socket": (0.93, 0.92, 0.88), "Plug": (0.78, 0.17, 0.13),
           "Screw": (0.55, 0.55, 0.57)}
 
@@ -41,7 +41,7 @@ def xiao_parts():
     """The board's leaf parts in case coordinates, coloured."""
     leaves = []
     for o in src.Objects:
-        if o.TypeId != "Part::Feature" or o.Name in ("Base", "Deck", "Lid") or o.Name.endswith("_ref") \
+        if o.TypeId != "Part::Feature" or o.Name in ("Base", "Lid") or o.Name.endswith("_ref") \
                 or o.Name.startswith("Screw_ref") or not o.Shape.Solids:
             continue
         s = o.Shape.copy()
@@ -113,7 +113,6 @@ def case_items(offsets=None, lid=True, screws=True):
     offsets = offsets or {}
     sh = lambda n: src.getObject(n).Shape
     items = [("Base", sh("Base"), COLORS["Base"], offsets.get("Base")),
-             ("Deck", sh("Deck"), COLORS["Deck"], offsets.get("Deck")),
              ("Battery", sh("Battery_ref"), COLORS["Battery"], offsets.get("Base"))]
     board_off = offsets.get("Board")
     items += [("Board", s, c, board_off) for s, c in xiao_parts()]
@@ -131,9 +130,9 @@ V = App.Vector
 # 1. assembled, turned so the USB-C end faces the camera
 shoot(scene("R_assembled", case_items(), turn=180), "case_assembled.png", "viewIsometric")
 
-# 2. exploded: base + battery, deck, board, lid, screws
-shoot(scene("R_exploded", case_items({"Deck": V(0, 0, 16), "Board": V(0, 0, 34), "Lid": V(0, 0, 52),
-                                      "Screw": V(0, 0, 66)}), turn=180), "case_exploded.png", "viewIsometric")
+# 2. exploded: base + battery, board, lid, screws
+shoot(scene("R_exploded", case_items({"Board": V(0, 0, 22), "Lid": V(0, 0, 38), "Screw": V(0, 0, 50)}),
+            turn=180), "case_exploded.png", "viewIsometric")
 
 # 3. cut-away through the socket and plug, seen from the front (-Y)
 cut = Part.makeBox(200, 100, 100, V(-100, -100 + 2.0, -10))

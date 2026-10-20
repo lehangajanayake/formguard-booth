@@ -73,6 +73,6 @@ In the model, with the pins on the pads, the KiCad socket hangs 7.9 mm and the p
 
 | File | What it is | Source |
 | --- | --- | --- |
-| `ISO7380-1_M3x15.step` | M3 x 15 hexagon socket button head screw, built by `make_reference_models.py` | ISO 7380-1 dimensions: head 5.7 dia x 1.65, 2.0 hex socket. No free official CAD download was found |
+| `ISO7380-1_M3x10.step` | M3 x 10 hexagon socket button head screw, built by `make_reference_models.py` | ISO 7380-1 dimensions: head 5.7 dia x 1.65, 2.0 hex socket. No free official CAD download was found |
 
 `make_reference_models.py` rebuilds the three modelled files. Run it in FreeCAD the same way as `formguard_case.py`.

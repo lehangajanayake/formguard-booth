@@ -8,7 +8,7 @@ Run inside FreeCAD (GUI or freecadcmd):
 Outputs (each frame is described next to its builder):
   battery-400mah/battery_400mah.step   38 x 25 x 6 pouch cell with PCM and leads
   jst-ph/PHR-2_mated_envelope.step     space the mated PHR-2 plug and its wire exit take
-  screws/ISO7380-1_M3x15.step          M3 x 15 hexagon socket button head screw
+  screws/ISO7380-1_M3x10.step          M3 x 10 hexagon socket button head screw
 """
 import os
 
@@ -77,7 +77,7 @@ def export_all():
     out = {
         os.path.join(HERE, "battery-400mah", "battery_400mah.step"): battery(),
         os.path.join(HERE, "jst-ph", "PHR-2_mated_envelope.step"): phr2_envelope(),
-        os.path.join(HERE, "screws", "ISO7380-1_M3x15.step"): iso7380_m3(15.0),
+        os.path.join(HERE, "screws", "ISO7380-1_M3x10.step"): iso7380_m3(10.0),
     }
     for path, shape in out.items():
         os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -56,15 +56,15 @@ Open the address Vite prints in **Chrome or Edge**. Web Bluetooth isn't supporte
 ## The sensor case
 
 <p align="center">
-  <img src="3d-case/images/case_exploded.png" alt="Exploded view: base with the battery, deck, board with the battery plug, lid and four screws" width="420">
+  <img src="3d-case/images/case_exploded.png" alt="Exploded view: base with the battery, board with the battery plug, lid and four screws" width="420">
 </p>
 
-Three printed parts held together by four standard M3 × 15 screws, with no inserts or nuts. The outside is **67.7 × 37 × 22.3 mm**.
+Two printed parts, a base and a lid, held together by four standard M3 × 10 screws, with no inserts or nuts. The outside is **67.7 × 37 × 22.3 mm**.
 
-- **Battery beside the board.** The LiPo sits at the far end from the USB-C, clear of the board. The board's battery socket hangs into a pit underneath it.
+- **Battery beside the board.** The LiPo lies on the floor at the far end from the USB-C, clear of the board. Two ribs on the lid hold it down. The board's battery socket hangs into a pit underneath the board.
 - **USB-C reachable from outside.** You can charge and flash without opening the case.
 - **LED window and reset hole** in the lid.
-- **Board clips into the lid.** The USB-C hooks into a cradle as a hinge, and a flexible latch clicks over the far end. No tape or tools, and it comes out the same way.
+- **Board clips into the lid.** The USB-C hooks into a cradle as a hinge, and a flexible latch clicks over the far end. No tape or tools, and it comes out the same way. With the lid on, the board's corners rest on four fins in the base.
 
 <p align="center">
   <img src="3d-case/images/case_section.png" alt="Cut-away: the board under the lid, the battery socket and plug in the pit below it, and the battery beside it" width="640">
@@ -74,6 +74,6 @@ Three printed parts held together by four standard M3 × 15 screws, with no inse
   <img src="3d-case/images/case_lid_board.png" alt="The lid upside down with the board clipped in" width="520">
 </p>
 
-Print it in PETG. The lid's latch has to flex, and PLA may crack after many clicks. A PrusaSlicer project for the MK4S is in `3d-case/print-package/` and takes about 1 h 22 min and 29 g for the set, with no supports.
+Print it in PETG. The lid's latch has to flex, and PLA may crack after many clicks. A PrusaSlicer project for the MK4S is in `3d-case/print-package/` and takes about 1 h 24 min and 28 g for the set, with no supports.
 
 Dimensions, assembly, print settings and how to change the design are in [`3d-case/README.md`](3d-case/README.md).
