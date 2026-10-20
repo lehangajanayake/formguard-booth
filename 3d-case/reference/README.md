@@ -52,8 +52,27 @@ Product page: https://core-electronics.com.au/polymer-lithium-ion-battery-400mah
 | Cell size | 38 x 25 x 6 mm | Product page only (no cell drawing is published) |
 | Weight | 11 g | Product page |
 | Voltage / capacity | 3.7 V nominal / 400 mAh | Product page |
-| Connector | JST-PH 2-pin (will be cut off and soldered) | Product page |
+| Connector | JST-PH 2-pin, plugs into the socket on the board | Product page |
 | Protection board (PCM) | 17 x 3.8 x 0.6 mm, DW01 + 8205 | `PCM-datasheet.pdf` |
 | Safety data | | `MSDS.pdf` |
+| 3D model | `battery_400mah.step`, built by `make_reference_models.py` | No cell drawing or CAD model is published, so it's modelled from the dimensions above |
 
 Pouch cells are not precise, and they swell with age. The case allows about 1 mm of clearance on each side of the cell. Measure the actual cell with calipers before printing.
+
+## JST PH connector on the board, `jst-ph/`
+
+| File | What it is | Source |
+| --- | --- | --- |
+| `JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical.step` | B2B-PH-K-S socket (2-pin, top entry): 5.9 x 4.55 x 6.0 mm housing, 3.4 mm pins | KiCad 3D library, https://gitlab.com/kicad/libraries/kicad-packages3D/-/raw/master/Connector_JST.3dshapes/JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical.step (CC-BY-SA 4.0) |
+| `PHR-2_mated_envelope.step` | Space the mated PHR-2 plug and its lead exit take, built by `make_reference_models.py` | JST serves its own PHR-2 model only through a request form, so this is an envelope. It uses the socket's cross section and extends 3 mm below the socket, with lead stubs |
+
+As soldered, the socket sits at 45° on the BAT/GND pads, facing the GND pin. With the plug and wires connected, its lowest point is 11 mm below the PCB (measured by the user).
+In the model, with the pins on the pads, the KiCad socket hangs 7.9 mm and the plug envelope's leads reach 11.75 mm, close to the measurement.
+
+## Screws, `screws/`
+
+| File | What it is | Source |
+| --- | --- | --- |
+| `ISO7380-1_M3x15.step` | M3 x 15 hexagon socket button head screw, built by `make_reference_models.py` | ISO 7380-1 dimensions: head 5.7 dia x 1.65, 2.0 hex socket. No free official CAD download was found |
+
+`make_reference_models.py` rebuilds the three modelled files. Run it in FreeCAD the same way as `formguard_case.py`.
