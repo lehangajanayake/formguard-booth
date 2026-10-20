@@ -17,7 +17,7 @@ const POSE_STEPS = [
  * @typedef {object} Setup
  * @property {string} id
  * @property {string} label
- * @property {string[]} positions  keys of POSITIONS
+ * @property {string[]} positions  keys of POSITIONS; a setup with 'upper' uses two boards
  * @property {boolean} implemented false setups can be chosen but not continued with
  * @property {string} [summary]    one line shown once selected
  * @property {string[]} [calibrationSteps]
@@ -25,7 +25,15 @@ const POSE_STEPS = [
 
 /** @type {Setup[]} */
 export const SETUPS = [
-  { id: 'upper+forearm', label: 'Upper arm + forearm', positions: ['upper', 'forearm'], implemented: false },
+  {
+    id: 'upper+forearm', label: 'Upper arm + forearm', positions: ['upper', 'forearm'], implemented: true,
+    summary: 'One sensor on each side of the elbow. Gives elbow angle and forearm twist, even while the shoulder moves.',
+    calibrationSteps: [
+      ...POSE_STEPS,
+      'Upper arm board strapped flat to the outside of the upper arm, midway between shoulder and elbow, one edge pointing toward the elbow.',
+      'Forearm board strapped flat to the outer forearm, midway between elbow and wrist, one edge pointing toward your hand.',
+    ],
+  },
   { id: 'upper+wrist', label: 'Upper arm + wrist', positions: ['upper', 'wrist'], implemented: false },
   {
     id: 'wrist', label: 'Wrist only', positions: ['wrist'], implemented: true,

@@ -15,7 +15,9 @@ const PACKET_BYTES = 13;   // u8 seq, u32 board ms, int16 w,x,y,z scaled by 3276
  * 'ready' (the board finished calibrating itself), 'stats' ({rateHz, lost}, once a second).
  */
 export class SensorLink {
-  constructor() {
+  /** @param {{name?: string}} [opts] `name` limits the device chooser to the board advertising that name */
+  constructor({ name } = {}) {
+    this.name = name || null;
     this.device = null;
     this.commandChar = null;
     this.connecting = false;
@@ -34,6 +36,7 @@ export class SensorLink {
 
   static get supported() { return typeof navigator !== 'undefined' && !!navigator.bluetooth; }
   get connected() { return !!(this.device && this.device.gatt.connected); }
+  get deviceName() { return this.device?.name || null; }
   msSincePacket() { return this.lastPacketAt ? performance.now() - this.lastPacketAt : Infinity; }
 
   /** Subscribes to an event. Returns a function that unsubscribes. */
@@ -57,7 +60,8 @@ export class SensorLink {
     if (!SensorLink.supported) throw new Error('Web Bluetooth needs Chrome or Edge, served from localhost or https.');
     let device;
     try {
-      device = await navigator.bluetooth.requestDevice({ filters: [{ services: [UUID.service] }] });
+      const filter = { services: [UUID.service], ...(this.name && { name: this.name }) };
+      device = await navigator.bluetooth.requestDevice({ filters: [filter] });
     } catch (e) {
       if (e.name === 'NotFoundError') return false;
       throw e;

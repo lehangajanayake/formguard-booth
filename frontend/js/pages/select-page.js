@@ -3,8 +3,8 @@ import { SETUPS, setupFromPositions, setupById, togglePosition } from '../sensor
 import { MARKER_IDS, setMarkersVisible, setMarkerState, pickTargets, markerIdOf } from '../model/sensor-markers.js';
 import { $ } from '../ui/dom.js';
 
-/** @param {{stage, model, labels, state, router, estimator}} ctx */
-export function createSelectPage({ stage, model, labels, state, router, estimator }) {
+/** @param {{stage, model, labels, state, router}} ctx */
+export function createSelectPage({ stage, model, labels, state, router }) {
   let root = null;
   let positions = new Set();
   let hovered = null;
@@ -29,7 +29,7 @@ export function createSelectPage({ stage, model, labels, state, router, estimato
     $('#sel-continue', root).addEventListener('click', () => {
       const setup = setupFromPositions(positions);
       if (!setup || !setup.implemented) return;
-      if (state.setupId !== setup.id) { state.calibrated = false; estimator.reset(); }
+      if (state.setupId !== setup.id) state.calibrated = false;
       state.setupId = setup.id;
       router.go('calibrate');
     });
@@ -46,7 +46,7 @@ export function createSelectPage({ stage, model, labels, state, router, estimato
     else if (!setup) note = positions.has('upper') && positions.size === 1
       ? 'An upper arm sensor needs a forearm or wrist sensor with it.'
       : 'That combination is not one of the setups.';
-    else if (!setup.implemented) note = `${setup.label} is not implemented yet. Choose Wrist only or Forearm only to continue.`;
+    else if (!setup.implemented) note = `${setup.label} is not implemented yet. Choose another setup to continue.`;
     else note = setup.summary;
     $('#sel-note', root).textContent = note;
     $('#sel-continue', root).disabled = !(setup && setup.implemented);

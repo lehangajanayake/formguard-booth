@@ -6,7 +6,8 @@ import { createStage } from './stage/stage.js';
 import * as model from './model/arm-model.js';
 import * as markers from './model/sensor-markers.js';
 import { SensorLink } from './sensor/ble-link.js';
-import { ForearmEstimator } from './sensor/forearm-estimator.js';
+import { SensorRig } from './sensor/rig.js';
+import { setupById } from './sensor-setups.js';
 import { createMarkerLabels } from './ui/marker-labels.js';
 import { createSelectPage } from './pages/select-page.js';
 import { createCalibratePage } from './pages/calibrate-page.js';
@@ -29,15 +30,17 @@ stage.scene.add(model.arm, model.plumb);
 model.applyTheme();
 stage.setFramingBox(model.computeFramingBox());
 
-const link = new SensorLink();
-const estimator = new ForearmEstimator(CFG);
+const links = { upper: new SensorLink(), lower: new SensorLink() };
+const rigs = {};
+/** The sensors and estimator for the chosen setup. Each setup keeps its own calibration. */
+const rig = () => (rigs[state.setupId] ||= new SensorRig(setupById(state.setupId), links, CFG));
 const labels = createMarkerLabels({ stage, container: $('#labels') });
-const ctx = { stage, model, markers, labels, state, link, estimator, cfg: CFG };
+const ctx = { stage, model, markers, labels, state, rig, cfg: CFG };
 
 const pages = {};
 const router = createRouter(pages, step => {
   if (step === 'calibrate') return !!state.setupId;
-  if (step === 'live') return state.calibrated && link.connected;
+  if (step === 'live') return state.calibrated && rig().connected;
   return true;
 }, { root: $('#page'), title: $('#page-title'), subtitle: $('#page-sub'), stepper: $('#stepper') });
 
