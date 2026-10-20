@@ -79,6 +79,12 @@ Every dimension is a named parameter at the top of `formguard_case.py`. To rebui
 ```
 
 You can also run the same `exec(...)` line in the FreeCAD Python console to see the parts with the reference models in place.
+
+The renders in `images/` (used in the main README) come from `render_images.py`. It needs the FreeCAD GUI, so run it in the FreeCAD Python console:
+
+```python
+p = "/path/to/3d-case/render_images.py"; exec(open(p).read(), {"__file__": p})
+```
 Each build checks the reference models against the case parts and prints any overlap. The only expected overlap is the four screws threading into the base.
 
 Check the battery with calipers before ordering. The battery cavity is 40 x 27 mm, which leaves 1 mm all round a 38 x 25 mm cell.
