@@ -26,9 +26,12 @@ try {
   throw e;
 }
 
-stage.scene.add(model.arm, model.plumb);
+stage.scene.add(model.root);
 model.applyTheme();
-stage.setFramingBox(model.computeFramingBox());
+const framing = model.computeFramingBox();
+framing.expandByObject(model.placeFloor(framing));
+framing.min.y -= 0.6;   // the camera looks down a little, so the floor's near edge sits lower on screen
+stage.setFramingBox(framing);
 
 const links = { upper: new SensorLink(), lower: new SensorLink() };
 const rigs = {};

@@ -2,9 +2,10 @@
    Colours, type and component styles come from FormGuard-design-system (tokens.css, components/bundle.css). */
 :root{
   color-scheme:dark;
-  /* read by the 3D model (arm-model.js applyTheme): glass skin rim and curl-path arrow. Neutral: red only marks a fault. */
+  /* read by the 3D model (arm-model.js applyTheme): glass skin rim, curl-path arrow and floor. Neutral: red only marks a fault. */
   --rim:var(--ink);
   --path:var(--ink-muted);
+  --floor:var(--ground-raised);
 }
 [data-theme="light"]{color-scheme:light}
 

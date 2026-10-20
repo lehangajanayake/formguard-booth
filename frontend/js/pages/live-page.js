@@ -25,6 +25,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
       <div class="readouts">
         <div class="fg-reading"><span class="fg-label">Elbow flexion</span><span><span class="fg-reading-value" id="live-elbow">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">Peak <span id="live-peak">0</span>&deg;</span></div>
         <div class="fg-reading"><span class="fg-label">Forearm rotation</span><span><span class="fg-reading-value" id="live-twist">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">0&deg; = palm toward thigh</span></div>
+        ${rig.slots.length > 1 ? `<div class="fg-reading"><span class="fg-label">Upper arm</span><span><span class="fg-reading-value" id="live-upper">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note" id="live-upper-note">from vertical</span></div>` : ''}
       </div>
       <p class="note" id="live-twist-note"></p>
       <p class="note warn" id="live-warn" hidden>No data from ${rig.slots.length > 1 ? 'one of the sensors' : 'the sensor'}.</p>
@@ -76,6 +77,11 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
     $('#live-elbow', root).textContent = fmt(angles.elbow);
     $('#live-peak', root).textContent = fmt(peak);
     $('#live-twist', root).textContent = fmt(angles.twist);
+    if (angles.upperArm) {
+      const { tilt, forward, out } = angles.upperArm;
+      $('#live-upper', root).textContent = fmt(tilt);
+      $('#live-upper-note', root).textContent = `${fmt(Math.abs(forward))}° ${forward < 0 ? 'back' : 'forward'} · ${fmt(Math.abs(out))}° ${out < 0 ? 'in' : 'out'}`;
+    }
     $('#live-warn', root).hidden = rig.streaming;
     $('#live-meta', root).textContent = meta();
   }
@@ -99,7 +105,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
         const a = estimator.update(s);
         if (!a) return;
         angles = a; peak = Math.max(peak, a.elbow);
-        model.setElbow(a.elbow); model.setTwist(a.twist); stage.requestRender();
+        model.setElbow(a.elbow); model.setTwist(a.twist); model.setShoulder(a.shoulder || null); stage.requestRender();
       }));
       cleanups.push(rig.on('disconnected', () => { state.calibrated = false; estimator.reset(); router.go('calibrate'); }));
       cleanups.push(stage.onFrame(paint));

@@ -10,7 +10,12 @@ export const PHI = 35 * D2R;              // resting tilt of the whole arm, matc
 const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
+// The geometry is a right arm. `root` mirrors it into a left arm, which is what the booth tracks: the sensor side (+Z) still
+// faces the camera and forward (+X in arm space) is on the screen's left.
+export const root = new THREE.Group();
+root.scale.x = -1;
 export const arm = new THREE.Group();     // canonical arm space: elbow hinge at origin, upper arm along +Y
+root.add(arm);
 arm.rotation.z = PHI;
 arm.position.set(-0.32, -1.95, 0);
 export const fore = new THREE.Group();    // everything that rides with the forearm
@@ -400,6 +405,21 @@ for (let y = 2.0; y > -5.2; y -= 0.5) {
 }
 { const tip = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.26, 18), pathMat); tip.position.set(arm.position.x, -5.5, 0); tip.rotation.z = Math.PI; plumb.add(tip); }
 plumb.visible = false;
+root.add(plumb);
+
+// floor under the arm, for contrast; placed by placeFloor() once the framing is known
+const floorMat = new THREE.MeshStandardMaterial({ roughness: 0.95, metalness: 0 });
+const floor = new THREE.Mesh(new THREE.CircleGeometry(1.9, 64).rotateX(-Math.PI / 2), floorMat);
+floor.receiveShadow = true;
+root.add(floor);
+
+/** Puts the floor just under `box` (world space), centred below it. */
+export function placeFloor(box) {
+  const c = box.getCenter(V(0, 0, 0));
+  floor.position.set(-c.x, box.min.y - 0.15, c.z);   // root mirrors x
+  floor.updateMatrixWorld(true);
+  return floor;
+}
 
 // ---------- skin tube (shoulder dome to knuckles), bent around the elbow ----------
 const SKIN_KEYS = curveKeys([
@@ -464,7 +484,8 @@ export const getElbow = () => thetaDeg;
 
 /** Rotates the hand and radius about the forearm axis. Positive turns the palm the way `twistSign` allows. */
 export function setTwist(deg) {
-  wristG.rotation.y = -deg * D2R;   // the forearm axis points toward the wrist, which is -Y in the model
+  // The forearm axis points toward the wrist, which is -Y in the model; root's mirror flips the sense once more.
+  wristG.rotation.y = deg * D2R;
 }
 
 let skinMode = 'glass', pathOn = true, calibView = false;
@@ -489,10 +510,29 @@ export function setSkinMode(mode) { skinMode = mode; applyLayers(); }
 /** @param {'muscles'|'bones'} name */
 export function setLayerOn(name, on) { layerOn[name] = on; applyLayers(); }
 
+// The whole arm turns about the humeral head. With no shoulder pose it rests at `restTilt`; a tracked shoulder starts from
+// vertical, the calibration pose, instead.
+const ARM_POS = arm.position.clone(), Z_AXIS = V(0, 0, 1);
+let restTilt = PHI, shoulderQ = null;
+const _tiltQ = new THREE.Quaternion(), _pivot = V(0, 0, 0), _off = V(0, 0, 0);
+function placeArm() {
+  _tiltQ.setFromAxisAngle(Z_AXIS, restTilt);
+  _pivot.copy(HC).applyQuaternion(_tiltQ).add(ARM_POS);
+  arm.quaternion.setFromAxisAngle(Z_AXIS, shoulderQ ? 0 : restTilt);
+  if (shoulderQ) arm.quaternion.premultiply(shoulderQ);
+  arm.position.copy(_pivot).sub(_off.copy(HC).applyQuaternion(arm.quaternion));
+}
+
+/** Rotates the upper arm about the shoulder by `q` (model space, from hanging straight down), or rests it when null. */
+export function setShoulder(q) {
+  shoulderQ = q ? (shoulderQ || new THREE.Quaternion()).copy(q) : null;
+  placeArm();
+}
+
 /** Straight, vertical arm without the dumbbell, hanging beside a plumb line. */
 export function setCalibrationView(on) {
   calibView = on;
-  arm.rotation.z = on ? 0 : PHI;
+  restTilt = on ? 0 : PHI; shoulderQ = null; placeArm();
   plumb.visible = on;
   if (on) { setPose(0); setTwist(0); }
   applyLayers();
@@ -504,20 +544,21 @@ export function applyTheme() {
   const rim = new THREE.Color(css('--rim')).convertLinearToSRGB();
   glassMat.uniforms.uColor.value.set(rim.r, rim.g, rim.b);
   pathMat.color.set(css('--path'));
+  floorMat.color.set(css('--floor'));
 }
 
 /** Bounding box of the arm over its whole range of motion plus the calibration pose, for camera framing. */
 export function computeFramingBox() {
   const box = new THREE.Box3();
-  const savedTilt = arm.rotation.z, savedDeg = thetaDeg;
+  const savedQ = arm.quaternion.clone(), savedPos = arm.position.clone(), savedDeg = thetaDeg;
   const grow = objects => objects.forEach(m => { m.geometry.computeBoundingBox(); box.expandByObject(m); });
   for (const deg of [30, 88, TH_MAX]) {
     setPose(deg); arm.updateMatrixWorld(true);
     grow([skinMesh, ...layerOf.gear, ...layerOf.path]);
   }
-  arm.rotation.z = 0; setPose(0); arm.updateMatrixWorld(true);
+  arm.rotation.z = 0; arm.position.copy(ARM_POS); setPose(0); arm.updateMatrixWorld(true);
   grow([skinMesh]);
-  arm.rotation.z = savedTilt; setPose(savedDeg < 0 ? 0 : savedDeg); arm.updateMatrixWorld(true);
+  arm.quaternion.copy(savedQ); arm.position.copy(savedPos); setPose(savedDeg < 0 ? 0 : savedDeg); arm.updateMatrixWorld(true);
   return box;
 }
 

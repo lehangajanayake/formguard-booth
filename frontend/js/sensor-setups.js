@@ -27,7 +27,7 @@ const POSE_STEPS = [
 export const SETUPS = [
   {
     id: 'upper+forearm', label: 'Upper arm + forearm', positions: ['upper', 'forearm'], implemented: true,
-    summary: 'One sensor on each side of the elbow. Gives elbow angle and forearm twist, even while the shoulder moves.',
+    summary: 'Left arm. One sensor on each side of the elbow. Gives elbow angle, forearm twist and where the elbow drifts to.',
     calibrationSteps: [
       ...POSE_STEPS,
       'Upper arm board strapped flat to the outside of the upper arm, midway between shoulder and elbow, one edge pointing toward the elbow.',
