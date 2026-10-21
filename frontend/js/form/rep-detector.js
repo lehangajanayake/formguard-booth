@@ -18,6 +18,7 @@
  * @property {number} endMs
  * @property {number} bottomDeg    elbow flexion at the start of the rep
  * @property {number} peakDeg      highest elbow flexion
+ * @property {number} refForward   upper arm angle forward at the bottom of the rep, the reference for swing
  * @property {number} swingDeg     largest upper arm swing from the reference, signed: + forward, - back
  * @property {string[]} faults     'elbow_swing' or nothing
  */
@@ -46,6 +47,7 @@ export class RepDetector {
     this.phase = 'wait';   // wait: arm not yet straight | bottom: between reps | lift | lower
     this._valley = null;   // {elbow, forward} lowest point before the current rep, or since the peak while lowering
     this._rep = null;
+    this.swingNow = null;  // upper arm swing from the reference right now, signed; null between reps
   }
 
   /** The rep in progress, or null. */
@@ -59,6 +61,7 @@ export class RepDetector {
   update({ elbow, upperArm }, t) {
     const { repRiseDeg, repEndDeg, repMinRangeDeg, elbowSwingDeg } = this.cfg;
     const forward = upperArm.forward;
+    this.swingNow = null;
 
     if (this.phase === 'wait') {
       if (elbow < repEndDeg) { this.phase = 'bottom'; this._valley = { elbow, forward }; }
@@ -71,7 +74,7 @@ export class RepDetector {
     }
 
     const rep = this._rep;
-    const swing = forward - rep._refForward;
+    const swing = this.swingNow = forward - rep.refForward;
     if (Math.abs(swing) > Math.abs(rep.swingDeg)) rep.swingDeg = swing;
 
     let event = null;
@@ -95,7 +98,6 @@ export class RepDetector {
     rep.endMs = t;
     const counted = rep.peakDeg - rep.bottomDeg >= repMinRangeDeg;
     if (counted) rep.index = ++this.count;
-    delete rep._refForward;
     this._rep = null;
     if (straight) { this.phase = 'bottom'; this._valley = { elbow, forward }; }
     else this._start(t);   // the next rep began from a partial bottom; its reference is that bottom
@@ -105,6 +107,6 @@ export class RepDetector {
   _start(t) {
     this.phase = 'lift';
     const { elbow, forward } = this._valley;
-    this._rep = { index: 0, startMs: t, peakMs: t, endMs: 0, bottomDeg: elbow, peakDeg: elbow, swingDeg: 0, faults: [], _refForward: forward };
+    this._rep = { index: 0, startMs: t, peakMs: t, endMs: 0, bottomDeg: elbow, peakDeg: elbow, refForward: forward, swingDeg: 0, faults: [] };
   }
 }

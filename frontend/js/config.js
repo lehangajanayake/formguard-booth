@@ -8,9 +8,10 @@ export const CFG = Object.assign({
   calibrationMs: 1500,   // how long the pose is sampled during calibration
   staleMs: 1500,         // "no data" after this long without a packet
   twistSign: 1,          // -1 flips which way forearm twist is positive
+  arm: 'left',           // arm chosen when the page opens: 'left' or 'right' (can be changed on the Calibrate page)
   // Form check (upper arm + forearm setup only)
   repRiseDeg: 25,        // elbow bend past the bottom that starts a rep, and drop from the top that starts lowering
   repEndDeg: 20,         // elbow flexion below which the arm counts as straight
   repMinRangeDeg: 50,    // smaller movements are not counted as reps
-  elbowSwingDeg: 15,     // upper arm swing forward or back during a rep that counts as elbow swing
+  elbowSwingDeg: 20,     // upper arm swing forward or back during a rep that counts as elbow swing
 }, window.SENSOR_CONFIG);

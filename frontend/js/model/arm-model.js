@@ -10,8 +10,8 @@ export const PHI = 35 * D2R;              // resting tilt of the whole arm, matc
 const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
-// The geometry is a right arm. `root` mirrors it into a left arm, which is what the booth tracks: the sensor side (+Z) still
-// faces the camera and forward (+X in arm space) is on the screen's left.
+// The geometry is a right arm. By default `root` mirrors it into a left arm (see setSide): the sensor side (+Z) still
+// faces the camera and forward (+X in arm space) is on the screen's left. A right arm has forward on the right.
 export const root = new THREE.Group();
 root.scale.x = -1;
 export const arm = new THREE.Group();     // canonical arm space: elbow hinge at origin, upper arm along +Y
@@ -413,10 +413,16 @@ const floor = new THREE.Mesh(new THREE.CircleGeometry(1.9, 64).rotateX(-Math.PI 
 floor.receiveShadow = true;
 root.add(floor);
 
+/** Shows a left arm (the default) or a right arm. Frame the camera again afterwards: the arm moves across the screen. */
+export function setSide(side) {
+  root.scale.x = side === 'right' ? 1 : -1;
+  root.updateMatrixWorld(true);
+}
+
 /** Puts the floor just under `box` (world space), centred below it. */
 export function placeFloor(box) {
   const c = box.getCenter(V(0, 0, 0));
-  floor.position.set(-c.x, box.min.y - 0.15, c.z);   // root mirrors x
+  floor.position.set(c.x * root.scale.x, box.min.y - 0.15, c.z);   // root may mirror x
   floor.updateMatrixWorld(true);
   return floor;
 }
