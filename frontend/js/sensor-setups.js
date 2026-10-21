@@ -27,7 +27,7 @@ const POSE_STEPS = [
 export const SETUPS = [
   {
     id: 'upper+forearm', label: 'Upper arm + forearm', positions: ['upper', 'forearm'], implemented: true,
-    summary: 'Left arm. One sensor on each side of the elbow. Gives elbow angle, forearm twist and where the elbow drifts to.',
+    summary: 'Left arm. One sensor on each side of the elbow. Gives elbow angle, forearm twist and where the elbow drifts to, and checks each rep for elbow swing.',
     calibrationSteps: [
       ...POSE_STEPS,
       'Upper arm board strapped flat to the outside of the upper arm, midway between shoulder and elbow, one edge pointing toward the elbow.',
@@ -37,12 +37,12 @@ export const SETUPS = [
   { id: 'upper+wrist', label: 'Upper arm + wrist', positions: ['upper', 'wrist'], implemented: false },
   {
     id: 'wrist', label: 'Wrist only', positions: ['wrist'], implemented: true,
-    summary: 'One sensor worn like a watch. Gives elbow angle and forearm twist, not wrist curl.',
+    summary: 'One sensor worn like a watch. Gives elbow angle and forearm twist, not wrist curl. No form check: that needs the upper arm sensor.',
     calibrationSteps: [...POSE_STEPS, 'Board worn like a watch just above the wrist bone, one edge pointing toward your hand.'],
   },
   {
     id: 'forearm', label: 'Forearm only', positions: ['forearm'], implemented: true,
-    summary: 'One sensor on the outer forearm. Gives elbow angle and forearm twist.',
+    summary: 'One sensor on the outer forearm. Gives elbow angle and forearm twist. No form check: that needs the upper arm sensor.',
     calibrationSteps: [...POSE_STEPS, 'Board strapped to the outer forearm, midway between elbow and wrist, one edge pointing toward your hand.'],
   },
 ];

@@ -91,6 +91,12 @@ header p{margin:var(--space-1) 0 0; font-size:14px; line-height:20px; color:var(
 .seg button:hover{color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--ink); color:var(--ground)}
 
+/* ---------- form check (.fg-flag, .fg-cue, .fg-reps from the design system) ---------- */
+.form{display:grid; gap:var(--space-4); padding-bottom:var(--space-4); border-bottom:1px solid var(--line)}
+.form-head{display:flex; justify-content:space-between; align-items:center; gap:var(--space-4)}
+.form-head .meta{flex:none}
+.form .fg-cue{max-width:none}
+
 /* ---------- live readings (.fg-reading from the design system) ---------- */
 .readouts{display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); padding-bottom:var(--space-4); border-bottom:1px solid var(--line)}
 .readouts .fg-reading{min-width:0}
