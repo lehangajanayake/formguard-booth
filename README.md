@@ -28,7 +28,7 @@ The app supports three sensor setups:
 
 | Folder | What's in it |
 | --- | --- |
-| [`embedded/`](embedded) | Sensor firmware (PlatformIO, Arduino). Orientation filter, BLE service, calibrate command |
+| [`embedded/`](embedded) | Sensor firmware (PlatformIO, Arduino). Orientation filter, BLE service, calibrate and sleep commands, battery level |
 | [`frontend/`](frontend) | Web app (Vite, three.js, Web Bluetooth) and the FormGuard design system |
 | [`3d-case/`](3d-case) | The sensor case: FreeCAD script, print files and reference models |
 
@@ -52,6 +52,12 @@ npm run dev
 ```
 
 Open the address Vite prints in **Chrome or Edge**. Web Bluetooth isn't supported in Safari or Firefox. Pick a sensor setup, strap the boards on as the app shows, and hold the calibration pose: arm hanging straight, palm facing your thigh.
+
+### Battery and sleep
+
+Each board reports its battery over BLE: voltage, an estimated percentage for the 400 mAh LiPo, and whether it is charging over USB-C. The Calibrate page shows it next to each sensor. The Live page shows it too, and warns at 15% or below.
+
+**Sleep** (on the Calibrate page) or **Sleep sensors** (on the Live page) switches a board off, except the accelerometer. **Double-tap the board** to wake it, then press Connect. RESET also restarts a sleeping board, and double-pressing RESET still enters the UF2 bootloader for flashing.
 
 ## The sensor case
 

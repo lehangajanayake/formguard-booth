@@ -18,14 +18,16 @@
 
 LSM6DS3 imu(I2C_MODE, 0x6A);
 
-// UUID bytes are little-endian. Strings: service e3a10000-4f6c-4b8e-9a3d-7c2f1b5d8a01, then ...0001 orientation, ...0002 command, ...0003 status.
+// UUID bytes are little-endian. Strings: service e3a10000-4f6c-4b8e-9a3d-7c2f1b5d8a01, then ...0001 orientation, ...0002 command, ...0003 status,
+// ...0004 battery.
 #define FG_UUID(n) {0x01, 0x8a, 0x5d, 0x1b, 0x2f, 0x7c, 0x3d, 0x9a, 0x8e, 0x4b, 0x6c, 0x4f, (n), 0x00, 0xa1, 0xe3}
 const uint8_t UUID_SERVICE[16] = FG_UUID(0x00);
 const uint8_t UUID_ORIENT[16] = FG_UUID(0x01);
 const uint8_t UUID_CMD[16] = FG_UUID(0x02);
 const uint8_t UUID_STATUS[16] = FG_UUID(0x03);
+const uint8_t UUID_BATTERY[16] = FG_UUID(0x04);
 
-const uint8_t CMD_CALIBRATE = 0x01;
+const uint8_t CMD_CALIBRATE = 0x01, CMD_SLEEP = 0x02;
 const uint8_t STATUS_READY = 0, STATUS_CALIBRATING = 1;
 
 // Notification payload, 13 bytes: sequence number, board time in ms, quaternion w,x,y,z scaled by 32767.
@@ -35,12 +37,26 @@ struct __attribute__((packed)) QuatPacket {
   int16_t q[4];
 };
 
+// Battery payload, 4 bytes: millivolts, estimated percent, flags.
+const uint8_t BATT_USB = 0x01, BATT_CHARGING = 0x02;
+struct __attribute__((packed)) BatteryPacket {
+  uint16_t mv;
+  uint8_t percent;
+  uint8_t flags;
+};
+
+// XIAO battery pins (Arduino numbers from the variant): ~CHG is low while the BQ25101 charges.
+const uint8_t PIN_CHG = 23;
+const uint32_t BATTERY_PERIOD_MS = 2000;
+
 BLEService fgService(UUID_SERVICE);
 BLECharacteristic orientChar(UUID_ORIENT);
 BLECharacteristic cmdChar(UUID_CMD);
 BLECharacteristic statusChar(UUID_STATUS);
+BLECharacteristic batteryChar(UUID_BATTERY);
 
 volatile bool calibrateRequested = false;
+volatile bool sleepRequested = false;
 volatile bool centralConnected = false;
 volatile uint32_t cmdFlashUntil = 0;
 uint32_t txFailures = 0;
@@ -286,6 +302,7 @@ void onDisconnect(uint16_t connHandle, uint8_t reason) {
 void onCommand(uint16_t connHandle, BLECharacteristic* chr, uint8_t* data, uint16_t len) {
   cmdFlashUntil = millis() + 150;
   if (len >= 1 && data[0] == CMD_CALIBRATE) calibrateRequested = true;
+  if (len >= 1 && data[0] == CMD_SLEEP) sleepRequested = true;
   DBG("ble: command 0x%02X\n", len ? data[0] : 0);
 }
 
@@ -316,6 +333,11 @@ void startBle() {
   statusChar.begin();
   statusChar.write8(STATUS_READY);
 
+  batteryChar.setProperties(CHR_PROPS_READ | CHR_PROPS_NOTIFY);
+  batteryChar.setPermission(SECMODE_OPEN, SECMODE_NO_ACCESS);
+  batteryChar.setFixedLen(sizeof(BatteryPacket));
+  batteryChar.begin();
+
   Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
   Bluefruit.Advertising.addTxPower();
   Bluefruit.Advertising.addService(fgService);
@@ -331,7 +353,95 @@ void setStatus(uint8_t state) {
   statusChar.notify8(state);
 }
 
+void setupBattery() {
+  pinMode(VBAT_ENABLE, OUTPUT);
+  digitalWrite(VBAT_ENABLE, LOW);  // keep LOW for good: driving it HIGH puts the battery voltage on P0.31
+  pinMode(PIN_CHARGING_CURRENT, OUTPUT);
+  digitalWrite(PIN_CHARGING_CURRENT, LOW);  // 100 mA charging (HIGH = 50 mA); 0.25C for the 400 mAh cell
+  pinMode(PIN_CHG, INPUT_PULLUP);
+  analogReference(AR_DEFAULT);  // 0..3.6 V
+  analogReadResolution(12);
+}
+
+// Resting LiPo voltage to charge left. Rough: the voltage sags under load and reads high while charging.
+uint8_t lipoPercent(uint16_t mv) {
+  static const uint16_t MV[] = {3300, 3500, 3600, 3650, 3700, 3750, 3800, 3900, 4000, 4100, 4200};
+  static const uint8_t PCT[] = {0, 2, 5, 10, 18, 30, 42, 62, 79, 90, 100};
+  if (mv <= MV[0]) return 0;
+  for (int i = 1; i < 11; i++) {
+    if (mv <= MV[i]) return PCT[i - 1] + (PCT[i] - PCT[i - 1]) * (mv - MV[i - 1]) / (MV[i] - MV[i - 1]);
+  }
+  return 100;
+}
+
+BatteryPacket readBattery() {
+  static float smoothedMv = 0;
+  uint32_t sum = 0;
+  for (int i = 0; i < 16; i++) sum += analogRead(PIN_VBAT);
+  float mv = sum / 16.0f * (3600.0f / 4096.0f) * (1510.0f / 510.0f);  // 1M / 510k divider
+  smoothedMv = smoothedMv == 0 ? mv : smoothedMv + 0.2f * (mv - smoothedMv);
+
+  uint32_t usbStatus = 0;
+  sd_power_usbregstatus_get(&usbStatus);
+  BatteryPacket packet;
+  packet.mv = (uint16_t)lroundf(smoothedMv);
+  packet.percent = lipoPercent(packet.mv);
+  packet.flags = 0;
+  if (usbStatus & POWER_USBREGSTATUS_VBUSDETECT_Msk) {
+    packet.flags |= BATT_USB;
+    if (digitalRead(PIN_CHG) == LOW) packet.flags |= BATT_CHARGING;
+  }
+  return packet;
+}
+
+void updateBattery() {
+  BatteryPacket packet = readBattery();
+  batteryChar.write(&packet, sizeof(packet));
+  if (batteryChar.notifyEnabled()) batteryChar.notify(&packet, sizeof(packet));
+}
+
+// Accelerometer double-tap on INT1 wakes the board from System OFF; values follow ST's double-tap example (AN5130).
+void armTapWake() {
+  imu.writeRegister(LSM6DS3_ACC_GYRO_CTRL2_G, 0x00);      // gyro off
+  imu.writeRegister(LSM6DS3_ACC_GYRO_CTRL1_XL, 0x60);     // accel 416 Hz, ±2 g
+  imu.writeRegister(LSM6DS3_ACC_GYRO_CTRL6_C, 0x10);      // accel low-power / normal mode
+  imu.writeRegister(LSM6DS3_ACC_GYRO_TAP_CFG1, 0x8E);     // interrupts on, tap on X, Y and Z
+  imu.writeRegister(LSM6DS3_ACC_GYRO_TAP_THS_6D, 0x0C);   // tap threshold 12 x FS/32 = 0.75 g
+  imu.writeRegister(LSM6DS3_ACC_GYRO_INT_DUR2, 0x7F);     // double-tap gap, quiet and shock windows
+  imu.writeRegister(LSM6DS3_ACC_GYRO_WAKE_UP_THS, 0x80);  // double tap on (not just single)
+  imu.writeRegister(LSM6DS3_ACC_GYRO_MD1_CFG, 0x08);      // double tap -> INT1
+}
+
+// Undoes armTapWake's interrupt routing in case the IMU kept its registers through the sleep.
+void disarmTapWake() {
+  imu.writeRegister(LSM6DS3_ACC_GYRO_MD1_CFG, 0x00);
+  imu.writeRegister(LSM6DS3_ACC_GYRO_WAKE_UP_THS, 0x00);
+  imu.writeRegister(LSM6DS3_ACC_GYRO_TAP_CFG1, 0x00);
+  imu.writeRegister(LSM6DS3_ACC_GYRO_CTRL6_C, 0x00);
+}
+
+// Drops the connection and enters System OFF. The board wakes by rebooting, so this never returns.
+void goToSleep() {
+  DBG("sleeping: double-tap to wake\n");
+  Bluefruit.Advertising.restartOnDisconnect(false);
+  Bluefruit.Advertising.stop();
+  if (Bluefruit.connected()) {
+    Bluefruit.Connection(Bluefruit.connHandle())->disconnect();
+    uint32_t t = millis();
+    while (Bluefruit.connected() && millis() - t < 500) delay(10);
+  }
+  setLed(false, false, false);
+  armTapWake();
+  delay(50);  // let the accelerometer settle so a stale event doesn't wake it at once
+#if DEBUG_SERIAL
+  Serial.flush();
+#endif
+  systemOff(PIN_LSM6DS3TR_C_INT1, HIGH);  // INT1 is active high
+  while (true) {}
+}
+
 void setup() {
+  setupBattery();
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
@@ -361,7 +471,9 @@ void setup() {
     }
   }
 
+  disarmTapWake();
   startBle();
+  updateBattery();
   calibrateImu();
 }
 
@@ -374,6 +486,8 @@ void loop() {
   }
 #endif
 
+  if (sleepRequested) goToSleep();
+
   if (calibrateRequested) {
     calibrateRequested = false;
     setStatus(STATUS_CALIBRATING);
@@ -383,6 +497,12 @@ void loop() {
   }
 
   uint32_t ms = millis();
+  static uint32_t lastBatteryMs = 0;
+  if (ms - lastBatteryMs >= BATTERY_PERIOD_MS) {
+    lastBatteryMs = ms;
+    updateBattery();
+  }
+
   if (ms < cmdFlashUntil) setLed(false, false, true);                      // blue flash: command received
   else if (!centralConnected) setLed(false, false, (ms / 500) % 2 == 0);   // blue slow blink: advertising
   else if (!orientChar.notifyEnabled()) setLed(false, true, true);         // cyan: connected, page not subscribed yet
