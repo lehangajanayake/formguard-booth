@@ -12,6 +12,7 @@ window.SENSOR_CONFIG = {
   // Form check (upper arm + forearm setup only)
   // repRiseDeg: 25,        // elbow bend past the bottom that starts a rep, and drop from the top that starts lowering
   // repEndDeg: 20,         // elbow flexion below which the arm counts as straight
-  // repMinRangeDeg: 50,    // smaller movements are not counted as reps
+  // repMinRangeDeg: 30,    // smaller movements are not counted as reps
   // elbowSwingDeg: 18,     // upper arm swing forward or back during a rep that counts as elbow swing
+  // partialPeakDeg: 75,    // a rep whose elbow flexion peaks below this is a partial rep
 };
