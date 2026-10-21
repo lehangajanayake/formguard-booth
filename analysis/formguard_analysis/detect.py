@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-DEFAULTS = {"repRiseDeg": 25.0, "repEndDeg": 20.0, "repMinRangeDeg": 50.0, "elbowSwingDeg": 18.0}
+DEFAULTS = {"repRiseDeg": 25.0, "repEndDeg": 20.0, "repMinRangeDeg": 30.0, "elbowSwingDeg": 18.0, "partialPeakDeg": 75.0}
 
 
 @dataclass
@@ -44,6 +44,7 @@ def detect_reps(t_s, elbow, forward, thresholds: dict | None = None, from_rest: 
     """
     th = {**DEFAULTS, **(thresholds or {})}
     rise, end, min_range, swing_th = th["repRiseDeg"], th["repEndDeg"], th["repMinRangeDeg"], th["elbowSwingDeg"]
+    partial_peak = th["partialPeakDeg"]
 
     phase, valley, rep, count = "wait", None, None, 0
     reps, aborted, swings, phases = [], [], [], []
@@ -68,7 +69,7 @@ def detect_reps(t_s, elbow, forward, thresholds: dict | None = None, from_rest: 
             swing_now = f - rep.ref_forward
             if abs(swing_now) > abs(rep.swing_deg):
                 rep.swing_deg = swing_now
-            if not rep.faults and abs(swing_now) > swing_th:
+            if "elbow_swing" not in rep.faults and abs(swing_now) > swing_th:
                 rep.faults.append("elbow_swing")
                 rep.fault_s = t
             if phase == "lift":
@@ -76,6 +77,8 @@ def detect_reps(t_s, elbow, forward, thresholds: dict | None = None, from_rest: 
                     rep.peak_deg, rep.peak_s = e, t
                 elif e < rep.peak_deg - rise:
                     phase, valley = "lower", (e, f)
+                    if rep.peak_deg < partial_peak:
+                        rep.faults.append("partial_rep")
             else:
                 if e < valley[0]:
                     valley = (e, f)

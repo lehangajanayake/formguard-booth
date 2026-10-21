@@ -67,6 +67,7 @@ with st.sidebar:
     st.caption("Same rules as the app (frontend/js/form/rep-detector.js). Change them to see what they would have flagged.")
     thresholds = {
         "elbowSwingDeg": st.slider("Elbow swing threshold (°)", 5.0, 45.0, DEFAULTS["elbowSwingDeg"], 0.5),
+        "partialPeakDeg": st.slider("Partial rep: peak elbow below (°)", 40.0, 140.0, DEFAULTS["partialPeakDeg"], 1.0),
         "repRiseDeg": st.slider("Rep start / lowering hysteresis (°)", 10.0, 45.0, DEFAULTS["repRiseDeg"], 1.0),
         "repEndDeg": st.slider("Arm counts as straight below (°)", 5.0, 45.0, DEFAULTS["repEndDeg"], 1.0),
         "repMinRangeDeg": st.slider("Smallest movement counted as a rep (°)", 20.0, 100.0, DEFAULTS["repMinRangeDeg"], 1.0),
@@ -160,7 +161,7 @@ with tab_one:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Label", rec.label)
     c2.metric("Reps", len(reps))
-    c3.metric("Flagged for elbow swing", int(reps["flagged"].sum()) if len(reps) else 0)
+    c3.metric("Flagged reps", int(reps["flagged"].sum()) if len(reps) else 0)
     c4.metric("Largest swing", f"{reps['abs_swing_deg'].max():.0f}°" if len(reps) else "–")
 
     if frames.empty:
@@ -230,18 +231,19 @@ with tab_compare:
     # one dot per rep, one column per label; red X = flagged at the current threshold
     rng = np.random.default_rng(0)
     fig = go.Figure()
-    for flagged, sym, colour, nm in [(False, "circle", NEUTRAL, "In range"), (True, "x", FAULT, "Flagged: elbow swing")]:
+    for flagged, sym, colour, nm in [(False, "circle", NEUTRAL, "In range"), (True, "x", FAULT, "Flagged")]:
         d = all_reps[all_reps["flagged"] == flagged]
         if d.empty:
             continue
         x = d["label"].map({l: i for i, l in enumerate(labels)}) + rng.uniform(-0.18, 0.18, len(d))
         fig.add_trace(go.Scatter(
             x=x, y=d[metric], mode="markers", name=nm, marker=dict(color=colour, size=10, symbol=sym, line=dict(width=0)),
-            customdata=np.stack([d["label"], d["rep"], d["recording"]], axis=1),
-            hovertemplate="%{customdata[0]} · rep %{customdata[1]}<br>%{y:.1f}<extra>%{customdata[2]}</extra>"))
-    if metric == "abs_swing_deg":
-        fig.add_hline(y=thresholds["elbowSwingDeg"], line=dict(color=FAULT, width=1, dash="dash"),
-                      annotation_text=f"threshold {thresholds['elbowSwingDeg']:g}°", annotation_position="top left")
+            customdata=np.stack([d["label"], d["rep"], d["recording"], d["faults"].replace("", "in range")], axis=1),
+            hovertemplate="%{customdata[0]} · rep %{customdata[1]}<br>%{y:.1f} · %{customdata[3]}<extra>%{customdata[2]}</extra>"))
+    line_at = {"abs_swing_deg": thresholds["elbowSwingDeg"], "peak_deg": thresholds["partialPeakDeg"]}.get(metric)
+    if line_at is not None:
+        fig.add_hline(y=line_at, line=dict(color=FAULT, width=1, dash="dash"),
+                      annotation_text=f"threshold {line_at:g}°", annotation_position="top left")
     fig.update_layout(height=460, margin=dict(t=30, l=10, r=10, b=10), yaxis_title=metrics[metric],
                       legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
                       xaxis=dict(tickmode="array", tickvals=list(range(len(labels))), ticktext=labels, gridcolor=GRID))
@@ -250,6 +252,7 @@ with tab_compare:
 
     summary = all_reps.groupby("label").agg(
         reps=("rep", "size"), flagged=("flagged", "sum"),
+        elbow_swing=("elbow_swing", "sum"), partial_rep=("partial_rep", "sum"),
         median=(metric, "median"), min=(metric, "min"), max=(metric, "max")).reset_index()
     summary["flagged %"] = (100 * summary["flagged"] / summary["reps"]).round(0)
     st.dataframe(summary.round(1), hide_index=True, use_container_width=True)

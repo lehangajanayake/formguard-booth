@@ -1,5 +1,6 @@
-// Counts bicep curl reps from elbow flexion and checks each one for elbow swing: the upper arm swinging forward or back
-// while the forearm curls, so the shoulder does part of the lift. Only the upper arm board knows where the elbow is, so
+// Counts bicep curl reps from elbow flexion and checks each one for two faults: elbow swing, the upper arm swinging
+// forward or back while the forearm curls so the shoulder does part of the lift; and a partial rep, the curl stopping
+// short of the top (peak flexion below `partialPeakDeg`), known once the elbow starts coming back down. Only the upper arm board knows where the elbow is, so
 // this needs the upper arm + forearm setup and takes the angles ArmEstimator.update() returns.
 //
 // Reps are found from the valleys and peaks of elbow flexion rather than fixed angles, so a lifter who never fully
@@ -20,7 +21,7 @@
  * @property {number} peakDeg      highest elbow flexion
  * @property {number} refForward   upper arm angle forward at the bottom of the rep, the reference for swing
  * @property {number} swingDeg     largest upper arm swing from the reference, signed: + forward, - back
- * @property {string[]} faults     'elbow_swing' or nothing
+ * @property {string[]} faults     'elbow_swing' and/or 'partial_rep', in the order they happened
  */
 
 /**
@@ -30,7 +31,7 @@
  */
 
 export class RepDetector {
-  /** @param {{repRiseDeg: number, repEndDeg: number, repMinRangeDeg: number, elbowSwingDeg: number}} cfg */
+  /** @param {{repRiseDeg: number, repEndDeg: number, repMinRangeDeg: number, elbowSwingDeg: number, partialPeakDeg: number}} cfg */
   constructor(cfg) {
     this.cfg = cfg;
     this.reset();
@@ -59,7 +60,7 @@ export class RepDetector {
    * @returns {RepEvent | null}
    */
   update({ elbow, upperArm }, t) {
-    const { repRiseDeg, repEndDeg, repMinRangeDeg, elbowSwingDeg } = this.cfg;
+    const { repRiseDeg, repEndDeg, repMinRangeDeg, elbowSwingDeg, partialPeakDeg } = this.cfg;
     const forward = upperArm.forward;
     this.swingNow = null;
 
@@ -78,14 +79,17 @@ export class RepDetector {
     if (Math.abs(swing) > Math.abs(rep.swingDeg)) rep.swingDeg = swing;
 
     let event = null;
-    if (!rep.faults.length && Math.abs(swing) > elbowSwingDeg) {
+    if (!rep.faults.includes('elbow_swing') && Math.abs(swing) > elbowSwingDeg) {
       rep.faults.push('elbow_swing');
       event = { type: 'fault', rep };
     }
 
     if (this.phase === 'lift') {
       if (elbow > rep.peakDeg) { rep.peakDeg = elbow; rep.peakMs = t; }
-      else if (elbow < rep.peakDeg - repRiseDeg) { this.phase = 'lower'; this._valley = { elbow, forward }; }
+      else if (elbow < rep.peakDeg - repRiseDeg) {
+        this.phase = 'lower'; this._valley = { elbow, forward };
+        if (rep.peakDeg < partialPeakDeg) { rep.faults.push('partial_rep'); event ||= { type: 'fault', rep }; }
+      }
       return event;
     }
 

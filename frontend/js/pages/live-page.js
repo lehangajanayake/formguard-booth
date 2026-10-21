@@ -10,6 +10,11 @@ import { $ } from '../ui/dom.js';
 const STRIP_REP_PX = 24;     // narrowest bar plus gap before the rep strip scrolls sideways instead of squeezing bars
 let lastLabel = '';          // the recording label is kept between visits to the page
 
+// Fault names as shown, in the order the cue card prefers them: swing matters more for safety than a short rep.
+const FAULT_NAMES = { elbow_swing: 'Elbow swing', partial_rep: 'Partial rep' };
+const mainFault = rep => Object.keys(FAULT_NAMES).find(f => rep.faults.includes(f)) || null;
+const faultNames = rep => rep.faults.map(f => FAULT_NAMES[f]).join(', ');
+
 /** @param {{stage, model, labels, state, router, rig, cfg}} ctx */
 export function createLivePage({ stage, model, labels, state, router, rig: currentRig, cfg }) {
   let root = null, rig = null;
@@ -47,7 +52,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
           <span class="fg-flag fg-flag-fault" role="status"><span class="fg-flag-sq" aria-hidden="true"></span><span id="form-cue-joint"></span></span>
           <span class="fg-cue-meta" id="form-cue-meta"></span>
         </div>
-        <p class="fg-cue-cue">Pin your elbow.</p>
+        <p class="fg-cue-cue" id="form-cue-cue"></p>
         <p class="fg-cue-fix" id="form-cue-fix"></p>
       </section>
       <div class="fg-reps" id="form-reps" hidden></div>
@@ -59,12 +64,11 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
     const top = Math.max(...shown.map(r => r.peakDeg - r.bottomDeg));   // depth is relative to this lifter's fullest rep
     const clean = reps.filter(r => !r.faults.length).length;
     const summary = (clean === reps.length ? 'Clean set · ' : '') + `${clean}/${reps.length} in range`;
-    const fault = r => r.faults.length ? 'Elbow swing' : '';
     return `
       <div class="fg-reps-head"><span class="fg-label">Bicep curl</span><span class="fg-reps-sum">${summary}</span></div>
       <div class="reps-scroll" id="form-reps-scroll"><div class="reps-track" style="min-width:${shown.length * STRIP_REP_PX}px">
       <div class="fg-reps-bars" role="img" aria-label="${summary}">${shown.map(r => `
-        <div class="fg-rep${r.faults.length ? ' fg-rep-fault' : ''}" title="Rep ${r.index}${r.faults.length ? `: ${fault(r)}` : ''}">
+        <div class="fg-rep${r.faults.length ? ' fg-rep-fault' : ''}" title="Rep ${r.index}${r.faults.length ? `: ${faultNames(r)}` : ''}">
           <div class="fg-rep-bar" style="height:${Math.round(Math.max(0.08, Math.min(1, (r.peakDeg - r.bottomDeg) / top)) * 100)}%"></div>
         </div>`).join('')}
       </div>
@@ -97,19 +101,27 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
     $('#form-paused', root).hidden = streaming;
     $('#form-flag', root).hidden = !streaming;
     $('#form-flag', root).className = `fg-flag fg-flag-${faulting ? 'fault' : 'clear'}`;
-    $('#form-flag-text', root).textContent = faulting ? 'Elbow swing' : 'In range';
+    $('#form-flag-text', root).textContent = faulting ? FAULT_NAMES[mainFault(cueRep)] : 'In range';
     $('#form-count', root).textContent = `${detector.count} ${detector.count === 1 ? 'rep' : 'reps'}`;
     $('#form-hint', root).hidden = !streaming || reps.length > 0 || faulting;
 
     $('#form-cue', root).hidden = !cueRep;
     if (cueRep) {
-      const swing = cueRep.swingDeg;
-      $('#form-cue-joint', root).textContent = swing >= 0 ? 'Elbow drifting forward' : 'Elbow swinging back';
       $('#form-cue-meta', root).textContent = `Rep ${cueRep.index || detector.count + 1}`;
-      $('#form-cue-fix', root).textContent =
-        `Your upper arm moved ${fmt(Math.abs(swing))}° ${swing >= 0 ? 'forward' : 'back'}. Keep it still at your side and let the forearm do the lifting.`;
+      if (mainFault(cueRep) === 'elbow_swing') {
+        const swing = cueRep.swingDeg;
+        $('#form-cue-joint', root).textContent = swing >= 0 ? 'Elbow drifting forward' : 'Elbow swinging back';
+        $('#form-cue-cue', root).textContent = 'Pin your elbow.';
+        $('#form-cue-fix', root).textContent =
+          `Your upper arm moved ${fmt(Math.abs(swing))}° ${swing >= 0 ? 'forward' : 'back'}. Keep it still at your side and let the forearm do the lifting.`;
+      } else {
+        $('#form-cue-joint', root).textContent = 'Partial rep';
+        $('#form-cue-cue', root).textContent = 'Curl all the way up.';
+        $('#form-cue-fix', root).textContent =
+          `Your elbow only bent to ${fmt(cueRep.peakDeg)}°. Bring the weight up toward your shoulder before lowering it.`;
+      }
     }
-    $('#live-upper', root)?.closest('.fg-reading').classList.toggle('fg-reading-fault', !!detector.current?.faults.length);
+    $('#live-upper', root)?.closest('.fg-reading').classList.toggle('fg-reading-fault', !!detector.current?.faults.includes('elbow_swing'));
 
     if (stripDirty) {
       stripDirty = false;

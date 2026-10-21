@@ -67,6 +67,9 @@ def rep_table(rec: Recording, result: DetectorResult, speeds: dict[str, pd.DataF
             "start_forward_deg": round(r.ref_forward, 1),
             "max_forward_deg": round(float(during["upper_forward"].max()), 1) if len(during) else np.nan,
             "flagged": bool(r.faults),
+            "faults": ", ".join(r.faults),
+            "elbow_swing": "elbow_swing" in r.faults,
+            "partial_rep": "partial_rep" in r.faults,
         }
         for pos, sp in speeds.items():
             during = sp[(sp["t_s"] >= r.start_s) & (sp["t_s"] <= r.end_s)]
