@@ -28,17 +28,25 @@ try {
 
 stage.scene.add(model.root);
 model.applyTheme();
-const framing = model.computeFramingBox();
-framing.expandByObject(model.placeFloor(framing));
-framing.min.y -= 0.6;   // the camera looks down a little, so the floor's near edge sits lower on screen
-stage.setFramingBox(framing);
+
+/** Mirrors the 3D arm to the side being tracked and frames the camera on it. */
+function setArmSide(side) {
+  model.setSide(side);
+  const framing = model.computeFramingBox();
+  framing.expandByObject(model.placeFloor(framing));
+  framing.min.y -= 0.6;   // the camera looks down a little, so the floor's near edge sits lower on screen
+  stage.setFramingBox(framing);
+  stage.requestRender();
+}
+state.arm = CFG.arm === 'right' ? 'right' : 'left';
+setArmSide(state.arm);
 
 const links = { upper: new SensorLink(), lower: new SensorLink() };
 const rigs = {};
 /** The sensors and estimator for the chosen setup. Each setup keeps its own calibration. */
 const rig = () => (rigs[state.setupId] ||= new SensorRig(setupById(state.setupId), links, CFG));
 const labels = createMarkerLabels({ stage, container: $('#labels') });
-const ctx = { stage, model, markers, labels, state, rig, cfg: CFG };
+const ctx = { stage, model, markers, labels, state, rig, cfg: CFG, setArmSide };
 
 const pages = {};
 const router = createRouter(pages, step => {

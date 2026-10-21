@@ -2,15 +2,20 @@
 // rotation relative to the upper arm since a straight-arm calibration pose. Shoulder movement therefore does not leak into
 // the angles. Samples are {upper, lower} pairs of body-to-world quaternions.
 //
-// Each board has its own world frame: both share gravity, but their headings differ because neither has a compass. The
-// heading offset is measured once, at calibration, from the board faces: both are strapped flat on the outer side of the
-// arm, so in the calibration pose their face normals point the same way. Gyro drift then slowly changes the offset, so
-// it is corrected continuously from the elbow being a hinge: once the elbow bends, the forearm can only lie in the upper
-// arm's forward plane, and any sideways lean is heading error. With the arm straight the offset doesn't matter.
+// Calibration has two steps. The still pose (arm hanging straight) finds which board axis lies along each segment. Then
+// the lifter raises the straight arm out in front and lowers it again. Both boards swing the same way, so that movement
+// says, in each board's own world, which way is forward:
+// - Each board has its own world frame: both share gravity, but their headings differ because neither has a compass.
+//   The heading offset between them is the difference between the two forward directions.
+// - In the upper arm board's frame, the direction gravity swings away from is forward, which fixes forward for the
+//   elbow-position readings below.
+// Nothing is assumed about which arm it is or which way round the boards are strapped. Gyro drift then slowly changes
+// the heading offset, so it is corrected continuously from the elbow being a hinge: once the elbow bends, the forearm can
+// only lie in the upper arm's forward plane, and any sideways lean is heading error.
 //
 // The upper arm board also says where the elbow is: how far the upper arm has swung forward or out from hanging straight
-// down. That comes from gravity alone, so it never drifts, and it ignores turning about the vertical. The arm is assumed
-// to be a left arm, so with the board face pointing out, forward is lateral x up.
+// down. That comes from gravity alone, so it never drifts, and it ignores turning about the vertical. Which side is
+// "out" depends on the arm, so the arm side ('left' or 'right') is passed to finishRaise().
 import * as THREE from 'three';
 import { AXES, upInBody, meanUp, downAxis, axisLabel, meanQuat, D2R, twistDeg } from './orientation-math.js';
 
@@ -18,6 +23,9 @@ const Z = new THREE.Vector3(0, 0, 1);
 const DOWN = new THREE.Vector3(0, -1, 0);
 const HEADING_MIN_ELBOW = 25;   // degrees of flexion before the hinge says anything about heading
 const HEADING_GAIN = 0.05;      // fraction of the heading error corrected per sample (~50 Hz)
+export const RAISE_MIN_DEG = 35;      // the raise must lift the upper arm at least this far from vertical
+const RAISE_USE_DEG = 20;             // raise samples with less upper arm tilt than this say too little about direction
+const RAISE_MAX_BEND_DEG = 25;        // forearm and upper arm tilts may differ this much before the elbow counts as bent
 
 export class ArmEstimator {
   /** @param {{forearmAxis: string, upperArmAxis: string, smoothing: number, twistSign: number}} cfg */
@@ -48,7 +56,9 @@ export class ArmEstimator {
     this.upperAxis = upper ? [...upper] : null;
     this.calibrated = false;
     this.collecting = false;
+    this.posed = false;        // the still pose is done and the raise is next
     this._samples = [];
+    this._raise = null;
     this._elbow = null;
     this._twist = null;
     this._gravity.set(0, 0, 0);
@@ -79,22 +89,65 @@ export class ArmEstimator {
       return { ok: false, reason: 'Could not find the forearm axis. Hold the arm straight, with one board edge pointing along it.' };
     }
 
-    const qU = meanQuat(uppers), qF = meanQuat(lowers);
-    const nU = Z.clone().applyQuaternion(qU), nF = Z.clone().applyQuaternion(qF);
-    if (Math.hypot(nU.x, nU.y) < 0.5 || Math.hypot(nF.x, nF.y) < 0.5) {
-      return { ok: false, reason: 'Strap both boards flat against the outer side of the arm, then calibrate again.' };
-    }
-    this._heading = Math.atan2(nU.y, nU.x) - Math.atan2(nF.y, nF.x);
-    this._qHeading.setFromAxisAngle(Z, this._heading);
-
+    this._qUCal = meanQuat(uppers); this._qFCal = meanQuat(lowers);
+    this._upB.set(...upU);
     this._axis.set(...this.axis);
-    this._relative({ upper: qU, lower: qF });
+    this.posed = true;
+    return { ok: true };
+  }
+
+  /** The two-board estimator needs the raise step after the still pose. */
+  get needsRaise() { return true; }
+
+  beginRaise() { this._raise = []; }
+
+  /** Call with every sample during the raise. Returns the upper arm's tilt from the pose's vertical, in degrees. */
+  addRaiseSample(s) {
+    if (!this._raise) return 0;
+    this._raise.push(s);
+    return this._upperTilt(s.upper);
+  }
+
+  /**
+   * Finishes calibration from the raise: the heading offset between the boards, and forward in the upper arm board.
+   * @param {'left'|'right'} side which arm the boards are on; it decides which side is "out"
+   * @returns {{ok: true} | {ok: false, reason: string}}
+   */
+  finishRaise(side) {
+    const samples = this._raise || []; this._raise = null;
+    if (!this.posed) return { ok: false, reason: 'Hold the calibration pose first.' };
+    const upAxis = new THREE.Vector3(...this.upperAxis);
+    const fwdU = new THREE.Vector3(), fwdF = new THREE.Vector3(), fwdB = new THREE.Vector3(), d = new THREE.Vector3(), g = new THREE.Vector3();
+    let maxTilt = 0, bendAtMax = 0;
+    for (const s of samples) {
+      const tilt = this._upperTilt(s.upper);
+      if (tilt > maxTilt) { maxTilt = tilt; bendAtMax = this._forearmTilt(s.lower) - this._segmentTilt(this.upperAxis, s.upper); }
+      if (tilt < RAISE_USE_DEG) continue;
+      // Each segment points forward-and-down: its horizontal part is forward in that board's world. Longer = more raised.
+      d.copy(upAxis).applyQuaternion(quat(s.upper)); fwdU.x += d.x; fwdU.y += d.y;
+      d.copy(this._axis).applyQuaternion(quat(s.lower)); fwdF.x += d.x; fwdF.y += d.y;
+      // As the arm goes forward, "up" in the upper arm board's frame swings toward the arm's front.
+      g.set(...upInBody(s.upper));
+      fwdB.add(g.addScaledVector(this._upB, -g.dot(this._upB)));
+    }
+    if (maxTilt < RAISE_MIN_DEG) {
+      return { ok: false, reason: 'The arm did not go up far enough. Keep it straight and raise it out in front of you, to about shoulder height.' };
+    }
+    if (Math.abs(bendAtMax) > RAISE_MAX_BEND_DEG) {
+      return { ok: false, reason: 'The elbow bent during the raise. Keep the arm straight, raise it out in front of you, then lower it.' };
+    }
+
+    this._heading = Math.atan2(fwdU.y, fwdU.x) - Math.atan2(fwdF.y, fwdF.x);
+    this._qHeading.setFromAxisAngle(Z, this._heading);
+    this._relative({ upper: this._qUCal, lower: this._qFCal });
     this._dStraight.copy(this._axis).applyQuaternion(this._qRel);
     this._setTwistReference();
 
-    this._upB.set(...upU);
-    this._latB.copy(Z).addScaledVector(this._upB, -Z.dot(this._upB)).normalize();
-    this._fwdB.crossVectors(this._latB, this._upB);
+    this._fwdB.copy(fwdB).normalize();
+    // Out is away from the body: forward x up points to the lifter's right.
+    this._latB.crossVectors(this._fwdB, this._upB);
+    if (side === 'left') this._latB.negate();
+    this.side = side;
 
     this.calibrated = true;
     return { ok: true };
@@ -159,8 +212,24 @@ export class ArmEstimator {
     this._qRel.set(lower.x, lower.y, lower.z, lower.w).normalize().premultiply(this._qHeading).premultiply(this._qU);
   }
 
+  /** Upper arm tilt from the calibration pose's vertical, degrees, from gravity alone. */
+  _upperTilt(qU) {
+    const up = upInBody(qU);
+    return Math.acos(Math.min(1, Math.max(-1, up[0] * this._upB.x + up[1] * this._upB.y + up[2] * this._upB.z))) / D2R;
+  }
+
+  /** Angle of a board axis from straight down, degrees, from gravity alone. */
+  _segmentTilt(axis, q) {
+    const up = upInBody(q);
+    return Math.acos(Math.min(1, Math.max(-1, -(axis[0] * up[0] + axis[1] * up[1] + axis[2] * up[2])))) / D2R;
+  }
+
+  _forearmTilt(qF) { return this._segmentTilt(this.axis, qF); }
+
   _setTwistReference() {
     this._qTwistCalInv.copy(this._qRel).invert();
     this._dTwistCal.copy(this._axis).applyQuaternion(this._qRel);
   }
 }
+
+const quat = q => new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize();

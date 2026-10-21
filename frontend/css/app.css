@@ -62,6 +62,7 @@ header p{margin:var(--space-1) 0 0; font-size:14px; line-height:20px; color:var(
 .actions{justify-content:flex-end}
 .grid-actions{display:grid; grid-template-columns:1fr 1fr; gap:var(--space-2)}
 .grid-actions .fg-btn{padding:0 var(--space-2)}
+.grid-actions > :last-child:nth-child(odd){grid-column:1 / -1}   /* an odd last button takes the whole row */
 .view .seg{flex:1 1 auto}
 .view .seg button{flex:1}
 
@@ -90,6 +91,26 @@ header p{margin:var(--space-1) 0 0; font-size:14px; line-height:20px; color:var(
 .seg button{border:0; background:transparent; color:var(--ink-muted); font-weight:600; font-size:14px; height:40px; padding:0 12px; border-radius:var(--radius-sm); cursor:pointer}
 .seg button:hover{color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--ink); color:var(--ground)}
+
+/* ---------- form check (.fg-flag, .fg-cue, .fg-reps from the design system) ---------- */
+.form{display:grid; gap:var(--space-4); padding-bottom:var(--space-4); border-bottom:1px solid var(--line)}
+.form-head{display:flex; justify-content:space-between; align-items:center; gap:var(--space-4)}
+.form-head .meta{flex:none}
+.form .fg-cue{max-width:none}
+.form, .form > *, .fg-reps{min-width:0}   /* lets the rep strip scroll inside the dock instead of widening it */
+.reps-scroll{overflow-x:auto; padding-bottom:var(--space-2); scrollbar-color:var(--line-strong) transparent}   /* long sets scroll sideways */
+.reps-track{display:flex; flex-direction:column; gap:var(--space-2)}
+
+/* ---------- recording ---------- */
+.record{display:grid; gap:var(--space-2); padding-bottom:var(--space-4); border-bottom:1px solid var(--line)}
+.record-row{display:flex; align-items:flex-end; gap:var(--space-2)}
+.field{flex:1; min-width:0; display:grid; gap:var(--space-1)}
+.field input{height:48px; min-width:0; padding:0 12px; border:1px solid var(--line-strong); border-radius:var(--radius-md); background:transparent;
+  color:var(--ink); font:16px/24px var(--font-display)}
+.field input:focus-visible{outline:2px solid var(--ink); outline-offset:0; border-color:var(--ink)}
+.field input:disabled{color:var(--ink-muted)}
+.field input::placeholder{color:var(--ink-muted)}
+.record-row .fg-btn{flex:none}
 
 /* ---------- live readings (.fg-reading from the design system) ---------- */
 .readouts{display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); padding-bottom:var(--space-4); border-bottom:1px solid var(--line)}
