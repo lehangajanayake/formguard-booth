@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-DEFAULTS = {"repRiseDeg": 25.0, "repEndDeg": 20.0, "repMinRangeDeg": 50.0, "elbowSwingDeg": 20.0}
+DEFAULTS = {"repRiseDeg": 25.0, "repEndDeg": 20.0, "repMinRangeDeg": 50.0, "elbowSwingDeg": 18.0}
 
 
 @dataclass

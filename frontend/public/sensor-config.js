@@ -13,5 +13,5 @@ window.SENSOR_CONFIG = {
   // repRiseDeg: 25,        // elbow bend past the bottom that starts a rep, and drop from the top that starts lowering
   // repEndDeg: 20,         // elbow flexion below which the arm counts as straight
   // repMinRangeDeg: 50,    // smaller movements are not counted as reps
-  // elbowSwingDeg: 20,     // upper arm swing forward or back during a rep that counts as elbow swing
+  // elbowSwingDeg: 18,     // upper arm swing forward or back during a rep that counts as elbow swing
 };
