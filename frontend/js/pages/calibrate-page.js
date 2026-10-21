@@ -1,6 +1,7 @@
 // Page 2: show the calibration pose on the 3D arm, connect the sensors, then calibrate.
 import { setMarkersVisible, setMarkerState, MARKER_IDS } from '../model/sensor-markers.js';
-import { SensorLink, describeBattery } from '../sensor/ble-link.js';
+import { SensorLink } from '../sensor/ble-link.js';
+import { batteryIconHtml, renderBatteries } from '../ui/battery-icon.js';
 import { collectPackets } from '../record/recorder.js';
 import { RAISE_MIN_DEG } from '../sensor/arm-estimator.js';
 import { $ } from '../ui/dom.js';
@@ -21,13 +22,11 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
 
   function slotStatus(slot, i) {
     const name = rig.slots.length > 1 && slot.name ? ` (${slot.name})` : '';
-    const battery = describeBattery(slot.link.battery);
-    const withBattery = text => (battery ? `${text} · ${battery}` : text);
     if (slot.link.connecting) return { text: `${slot.label}: connecting…`, tone: 'wait' };
     if (!slot.link.connected && slot.link.asleep) return { text: `${slot.label}: asleep. Double-tap it to wake, then Connect`, tone: 'off' };
     if (!slot.link.connected) return { text: `${slot.label}: not connected${name}`, tone: 'off' };
-    if (!hadData[i]) return { text: withBattery(`${slot.label}: connected, waiting for data`), tone: 'wait' };
-    return { text: withBattery(`${slot.label}: ${slot.link.rateHz} Hz`), tone: 'live' };
+    if (!hadData[i]) return { text: `${slot.label}: connected, waiting for data`, tone: 'wait' };
+    return { text: `${slot.label}: ${slot.link.rateHz} Hz`, tone: 'live' };
   }
 
   function status() {
@@ -48,6 +47,7 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
       const s = slotStatus(slot, i);
       $(`#cal-dot-${i}`, root).dataset.s = s.tone;
       $(`#cal-text-${i}`, root).textContent = s.text;
+      renderBatteries($(`#cal-batt-${i}`, root), batteryIconHtml(slot.link.connected ? slot.link.battery : null));
       const connect = $(`#cal-connect-${i}`, root);
       connect.textContent = slot.link.connected ? 'Disconnect' : 'Connect';
       connect.disabled = slot.link.connecting || running;
@@ -169,6 +169,7 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
         ${rig.slots.map((_, i) => `
           <div class="row">
             <span class="stat"><i id="cal-dot-${i}" data-s="off"></i><span id="cal-text-${i}"></span></span>
+            <span class="batts" id="cal-batt-${i}"></span>
             <button type="button" class="fg-btn fg-btn-quiet" id="cal-sleep-${i}" hidden>Sleep</button>
             <button type="button" class="fg-btn fg-btn-quiet" id="cal-connect-${i}">Connect</button>
           </div>`).join('')}

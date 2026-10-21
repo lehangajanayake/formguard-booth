@@ -5,11 +5,10 @@
 import { setMarkersVisible, setMarkerState, MARKER_IDS } from '../model/sensor-markers.js';
 import { RepDetector } from '../form/rep-detector.js';
 import { Recorder, downloadRecording } from '../record/recorder.js';
-import { describeBattery } from '../sensor/ble-link.js';
 import { POSITIONS } from '../sensor-setups.js';
+import { batteryIconHtml, renderBatteries, LOW_BATTERY_PERCENT } from '../ui/battery-icon.js';
 import { $ } from '../ui/dom.js';
 
-const LOW_BATTERY_PERCENT = 15;   // on battery at or below this, the page warns
 const STRIP_REP_PX = 24;     // narrowest bar plus gap before the rep strip scrolls sideways instead of squeezing bars
 let lastLabel = '';          // the recording label is kept between visits to the page
 
@@ -34,9 +33,12 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
 
   function meta() {
     const axes = rig.slots.length > 1 ? rig.estimator.axisLabel : `forearm axis ${rig.estimator.axisLabel}`;
-    const batteries = rig.slots.filter(sl => sl.link.battery)
-      .map(sl => `${rig.slots.length > 1 ? `${POSITIONS[sl.position].label} ` : 'battery '}${describeBattery(sl.link.battery)}`);
-    return [rig.setup.label, axes, `${rig.rateHz} Hz`, `${rig.lost} lost`, ...batteries].join(' · ');
+    return `${rig.setup.label} · ${axes} · ${rig.rateHz} Hz · ${rig.lost} lost`;
+  }
+
+  /** One battery icon per board, labelled when there are two. */
+  function batteriesHtml() {
+    return rig.slots.map(sl => batteryIconHtml(sl.link.battery, rig.slots.length > 1 ? POSITIONS[sl.position].label : '')).join('');
   }
 
   /** Warning for a board running low, or null. */
@@ -194,7 +196,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
       </div>
       <p class="note warn" id="live-battery" hidden></p>
       <p class="note warn" id="live-warn" hidden>No data from ${rig.slots.length > 1 ? 'one of the sensors' : 'the sensor'}.</p>
-      <p class="meta" id="live-meta"></p>
+      <div class="meta-row"><p class="meta" id="live-meta"></p><span class="batts" id="live-batt"></span></div>
       <div class="row view">
         <div class="seg" role="group" aria-label="Skin">
           <span class="lbl">Skin</span>
@@ -248,6 +250,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
     $('#live-battery', root).hidden = !battery;
     if (battery) $('#live-battery', root).textContent = battery;
     $('#live-meta', root).textContent = meta();
+    renderBatteries($('#live-batt', root), batteriesHtml());
     paintForm();
     paintRecord();
   }
