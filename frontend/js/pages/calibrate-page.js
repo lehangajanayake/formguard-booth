@@ -1,6 +1,7 @@
 // Page 2: show the calibration pose on the 3D arm, connect the sensors, then calibrate.
 import { setMarkersVisible, setMarkerState, MARKER_IDS } from '../model/sensor-markers.js';
 import { SensorLink } from '../sensor/ble-link.js';
+import { batteryIconHtml, renderBatteries } from '../ui/battery-icon.js';
 import { collectPackets } from '../record/recorder.js';
 import { RAISE_MIN_DEG } from '../sensor/arm-estimator.js';
 import { $ } from '../ui/dom.js';
@@ -22,6 +23,7 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
   function slotStatus(slot, i) {
     const name = rig.slots.length > 1 && slot.name ? ` (${slot.name})` : '';
     if (slot.link.connecting) return { text: `${slot.label}: connecting…`, tone: 'wait' };
+    if (!slot.link.connected && slot.link.asleep) return { text: `${slot.label}: asleep. Double-tap it to wake, then Connect`, tone: 'off' };
     if (!slot.link.connected) return { text: `${slot.label}: not connected${name}`, tone: 'off' };
     if (!hadData[i]) return { text: `${slot.label}: connected, waiting for data`, tone: 'wait' };
     return { text: `${slot.label}: ${slot.link.rateHz} Hz`, tone: 'live' };
@@ -45,9 +47,13 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
       const s = slotStatus(slot, i);
       $(`#cal-dot-${i}`, root).dataset.s = s.tone;
       $(`#cal-text-${i}`, root).textContent = s.text;
+      renderBatteries($(`#cal-batt-${i}`, root), batteryIconHtml(slot.link.connected ? slot.link.battery : null));
       const connect = $(`#cal-connect-${i}`, root);
       connect.textContent = slot.link.connected ? 'Disconnect' : 'Connect';
       connect.disabled = slot.link.connecting || running;
+      const sleep = $(`#cal-sleep-${i}`, root);
+      sleep.hidden = !slot.link.connected;
+      sleep.disabled = running;
     });
     const s = status();
     $('#cal-status', root).hidden = !s;
@@ -93,6 +99,13 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
     if (slot.link.connected) { slot.link.disconnect(); return; }
     try { await rig.connect(slot); }
     catch (e) { message = { text: e.message || 'Could not connect.', tone: 'err' }; }
+    refresh();
+  }
+
+  async function sleepClicked(slot) {
+    message = null;
+    try { await slot.link.sendSleep(); }
+    catch (e) { message = { text: 'Could not send the sleep command.', tone: 'err' }; }
     refresh();
   }
 
@@ -156,6 +169,8 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
         ${rig.slots.map((_, i) => `
           <div class="row">
             <span class="stat"><i id="cal-dot-${i}" data-s="off"></i><span id="cal-text-${i}"></span></span>
+            <span class="batts" id="cal-batt-${i}"></span>
+            <button type="button" class="fg-btn fg-btn-quiet" id="cal-sleep-${i}" hidden>Sleep</button>
             <button type="button" class="fg-btn fg-btn-quiet" id="cal-connect-${i}">Connect</button>
           </div>`).join('')}
         <p class="stat" id="cal-status" hidden><i id="cal-dot" data-s="off"></i><span id="cal-text"></span></p>
@@ -164,7 +179,10 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
           <button type="button" class="fg-btn fg-btn-quiet" id="cal-back">Back</button>
           <button type="button" class="fg-btn fg-btn-primary" id="cal-start" disabled>Calibrate</button>
         </div>`;
-      rig.slots.forEach((slot, i) => $(`#cal-connect-${i}`, root).addEventListener('click', () => connectClicked(slot)));
+      rig.slots.forEach((slot, i) => {
+        $(`#cal-connect-${i}`, root).addEventListener('click', () => connectClicked(slot));
+        $(`#cal-sleep-${i}`, root).addEventListener('click', () => sleepClicked(slot));
+      });
       $('#cal-start', root).addEventListener('click', runCalibration);
       root.querySelectorAll('[data-arm]').forEach(btn => btn.addEventListener('click', () => chooseArm(btn.dataset.arm)));
       $('#cal-back', root).addEventListener('click', () => router.go('select'));
@@ -173,7 +191,7 @@ export function createCalibratePage({ stage, model, labels, state, router, rig: 
         cleanups.push(slot.link.on('disconnected', () => { hadData[i] = false; refresh(); }));
         cleanups.push(slot.link.on('packet', () => { if (!hadData[i]) { hadData[i] = true; refresh(); } }));
       });
-      for (const event of ['connecting', 'connected', 'stats']) cleanups.push(rig.on(event, refresh));
+      for (const event of ['connecting', 'connected', 'stats', 'battery']) cleanups.push(rig.on(event, refresh));
       refresh();
     },
     leave() {

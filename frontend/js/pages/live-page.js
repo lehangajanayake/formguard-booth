@@ -5,6 +5,8 @@
 import { setMarkersVisible, setMarkerState, MARKER_IDS } from '../model/sensor-markers.js';
 import { RepDetector } from '../form/rep-detector.js';
 import { Recorder, downloadRecording } from '../record/recorder.js';
+import { POSITIONS } from '../sensor-setups.js';
+import { batteryIconHtml, renderBatteries, LOW_BATTERY_PERCENT } from '../ui/battery-icon.js';
 import { $ } from '../ui/dom.js';
 
 const STRIP_REP_PX = 24;     // narrowest bar plus gap before the rep strip scrolls sideways instead of squeezing bars
@@ -32,6 +34,17 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
   function meta() {
     const axes = rig.slots.length > 1 ? rig.estimator.axisLabel : `forearm axis ${rig.estimator.axisLabel}`;
     return `${rig.setup.label} · ${axes} · ${rig.rateHz} Hz · ${rig.lost} lost`;
+  }
+
+  /** One battery icon per board, labelled when there are two. */
+  function batteriesHtml() {
+    return rig.slots.map(sl => batteryIconHtml(sl.link.battery, rig.slots.length > 1 ? POSITIONS[sl.position].label : '')).join('');
+  }
+
+  /** Warning for a board running low, or null. */
+  function lowBattery() {
+    const low = rig.slots.filter(sl => sl.link.battery && !sl.link.battery.usb && sl.link.battery.percent <= LOW_BATTERY_PERCENT);
+    return low.length ? `Battery low: ${low.map(sl => `${sl.label.toLowerCase()} ${sl.link.battery.percent}%`).join(', ')}. Charge it over USB-C.` : null;
   }
 
   function formHtml() {
@@ -181,8 +194,9 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
         <div class="fg-reading"><span class="fg-label">Elbow flexion</span><span><span class="fg-reading-value" id="live-elbow">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">Peak <span id="live-peak">0</span>&deg;</span></div>
         ${rig.slots.length > 1 ? `<div class="fg-reading"><span class="fg-label">Upper arm</span><span><span class="fg-reading-value" id="live-upper">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note" id="live-upper-note">from vertical</span></div>` : ''}
       </div>
+      <p class="note warn" id="live-battery" hidden></p>
       <p class="note warn" id="live-warn" hidden>No data from ${rig.slots.length > 1 ? 'one of the sensors' : 'the sensor'}.</p>
-      <p class="meta" id="live-meta"></p>
+      <div class="meta-row"><p class="meta" id="live-meta"></p><span class="batts" id="live-batt"></span></div>
       <div class="row view">
         <div class="seg" role="group" aria-label="Skin">
           <span class="lbl">Skin</span>
@@ -199,6 +213,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
       <div class="grid-actions">
         <button type="button" class="fg-btn fg-btn-quiet" id="live-peak-reset">${detector ? 'New set' : 'Reset peak'}</button>
         <button type="button" class="fg-btn fg-btn-quiet" id="live-sensors">Change sensors</button>
+        <button type="button" class="fg-btn fg-btn-quiet" id="live-sleep">Sleep sensors</button>
         <button type="button" class="fg-btn fg-btn-secondary" id="live-recal">Recalibrate</button>
       </div>`;
 
@@ -219,6 +234,7 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
     $('#rec-btn', root).addEventListener('click', () => (recorder ? stopRecording() : startRecording()));
     $('#live-sensors', root).addEventListener('click', () => router.go('select'));
     $('#live-recal', root).addEventListener('click', () => router.go('calibrate'));
+    $('#live-sleep', root).addEventListener('click', () => rig.sleepBoards().catch(() => {}));   // the calibrate page shows the outcome
   }
 
   function paint() {
@@ -230,7 +246,11 @@ export function createLivePage({ stage, model, labels, state, router, rig: curre
       $('#live-upper-note', root).textContent = `${fmt(Math.abs(forward))}° ${forward < 0 ? 'back' : 'forward'} · ${fmt(Math.abs(out))}° ${out < 0 ? 'in' : 'out'}`;
     }
     $('#live-warn', root).hidden = rig.streaming;
+    const battery = lowBattery();
+    $('#live-battery', root).hidden = !battery;
+    if (battery) $('#live-battery', root).textContent = battery;
     $('#live-meta', root).textContent = meta();
+    renderBatteries($('#live-batt', root), batteriesHtml());
     paintForm();
     paintRecord();
   }

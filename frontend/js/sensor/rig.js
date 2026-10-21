@@ -49,7 +49,7 @@ export class SensorRig {
   connect(slot) { slot.link.name = slot.name; return slot.link.connect(); }
 
   /**
-   * 'connecting' | 'connected' | 'disconnected' | 'stats' fire for any of the boards. 'sample' delivers what the estimator
+   * 'connecting' | 'connected' | 'disconnected' | 'stats' | 'battery' fire for any of the boards. 'sample' delivers what the estimator
    * takes: a quaternion for one board, or an {upper, lower} pair for two, paced by the lower board's packets.
    * Returns a function that unsubscribes.
    */
@@ -66,6 +66,11 @@ export class SensorRig {
     }
     const offs = this.slots.map(s => s.link.on(event, fn));
     return () => offs.forEach(off => off());
+  }
+
+  /** Puts every connected board to sleep. Each one wakes when it is double-tapped. */
+  sleepBoards() {
+    return Promise.all(this.slots.filter(s => s.link.connected).map(s => s.link.sendSleep()));
   }
 
   /** Asks every board to recalibrate itself and waits for all of them, or `timeoutMs`. */
