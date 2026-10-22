@@ -1,8 +1,6 @@
 const sessions = {
   clean: { file: 'formguard_upper+forearm_clean-nidula_20261021-081458.json', clip: 'clean-curl.mp4', insight: 'Controlled curl. The elbow angle rises and returns across the recorded set.', fault: false },
   swing: { file: 'formguard_upper+forearm_wong-swing-arm-nidula_20261021-081551.json', clip: 'elbow-swing.mp4', insight: 'Swinging arm. Upper arm movement rises as the curl progresses.', fault: true },
-  elbow: { file: 'formguard_upper+forearm_wrong-elbow-too-forward-nidula_20261021-081703.json', insight: 'Elbow moves forward. The upper arm sensor captures the change alongside elbow flexion.', fault: true },
-  partial: { file: 'formguard_upper+forearm_partial-rep-nidula_20261021-081625.json', insight: 'Partial rep. The elbow trace shows a shorter range of motion.', fault: true },
 };
 
 const $ = (query) => document.querySelector(query);
