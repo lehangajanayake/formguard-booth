@@ -94,8 +94,6 @@ function draw() {
   }
   const column = (name) => data.derived.columns.indexOf(name);
   const reading = (name) => frame[column(name)];
-  const angle = Math.max(0, Math.min(145, Math.round(Number(reading('elbow')) || 0)));
-  $('#hero-angle').textContent = `${angle}°`;
   const sensorSeconds = hasVideo() ? sensorSecondsAtVideoTime() : progress * ((frames.at(-1)[column('host_ms')] - frames[0][column('host_ms')]) / 1000);
   const repEvents = (data.derived.rep_events || []).filter(event => event.host_ms <= frames[0][column('host_ms')] + (sensorSeconds || 0) * 1000);
   const completedReps = repEvents.filter(event => event.type === 'rep').map(event => ({ bottom: event.rep.bottomDeg, peak: event.rep.peakDeg }));
