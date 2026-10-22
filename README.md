@@ -4,7 +4,13 @@
 
 # FormGuard booth demo
 
-FormGuard helps lifters fix their form without a personal trainer. This repo is the booth demo: small motion sensors strapped to the arm, streaming to a web app that shows the arm in 3D while someone does bicep curls.
+FormGuard helps lifters understand their lifting form. Small motion sensors strapped to the arm stream to a web app that shows movement in 3D and surfaces elbow motion during bicep curls.
+
+The standalone project site is in [`site/`](site/). [Watch the demo](https://formguard-booth-demo-report.vercel.app) to see the recorded booth sessions, hardware overview and custom sensor enclosure. The live sensor app remains in [`frontend/`](frontend/).
+
+The booth videos are in `site/media/` as `clean-curl.mp4` and `elbow-swing.mp4`; the project page synchronizes them with the clean curl and swinging arm sensor recordings. Session recordings under `data/` are included in `site/recordings/` for replay and downloads.
+
+To recalculate the video-to-sensor alignment, install `analysis/requirements.txt` with `uv pip install --python analysis/.venv/bin/python -r analysis/requirements.txt`, then run `analysis/.venv/bin/python analysis/sync_video_pose.py`. YOLO pose detection finds the clean clip's calibration gesture and curl cycles; clean playback starts at the third curl, aligned with the first sample in that recording. YOLO weights are cached outside the repository.
 
 <p align="center">
   <img src="3d-case/images/case_assembled.png" alt="The sensor case, assembled, with the USB-C port at the front" width="520">
@@ -51,7 +57,11 @@ npm install
 npm run dev
 ```
 
-Open the address Vite prints in **Chrome or Edge**. Web Bluetooth isn't supported in Safari or Firefox. Pick a sensor setup, strap the boards on as the app shows, and hold the calibration pose: arm hanging straight, palm facing your thigh.
+Open the address Vite prints to use the live sensor app. Web Bluetooth isn't supported in Safari or Firefox. Pick a sensor setup, strap the boards on as the app shows, and hold the calibration pose: arm hanging straight, palm facing your thigh.
+
+### Build the static website
+
+The project site is plain static HTML, CSS and JavaScript. Serve or deploy the contents of `site/` as a static website. Keep its `assets/`, `recordings/` and `media/` folders alongside `index.html`.
 
 ### Battery and sleep
 

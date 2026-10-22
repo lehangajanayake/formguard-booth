@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FormGuard live arm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="FormGuard-design-system/tokens.css">
+<link rel="stylesheet" href="FormGuard-design-system/components/bundle.css">
+<link rel="stylesheet" href="css/app.css">
+<style>
+  #dock{gap:var(--space-2);padding:var(--space-4)}
+  #page{gap:var(--space-3)}
+  .readouts{padding-bottom:var(--space-2)}
+  .form{padding-bottom:var(--space-2)}
+  .replay-phase{font:500 12px/16px var(--font-mono);color:var(--ink-muted);margin:0}
+  @media(max-width:599px){#dock{max-height:68%;bottom:var(--space-2);padding:var(--space-2)} #header{top:var(--space-2);left:var(--space-2)} #header .logo{height:20px;margin-bottom:var(--space-1)}}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" aria-label="3D FormGuard arm showing recorded movement"></canvas><div id="labels" aria-hidden="true"></div><div id="msg">Building the arm…</div></div>
+<header id="header"><img class="logo" src="FormGuard-design-system/logos/formguard-lockup-reversed.svg" alt="FormGuard" height="24"><h1 id="page-title">Live arm</h1><p id="page-sub">Elbow and forearm angles from your sensor.</p></header>
+<div id="dock">
+  <div class="form" aria-label="Form check"><div class="form-head"><span class="fg-flag fg-flag-clear" id="form-flag" role="status"><span class="fg-flag-sq" aria-hidden="true"></span><span id="form-flag-text">In range</span></span><span class="meta" id="form-count">0 reps</span></div><p class="hint" id="form-hint">Recorded sensor movement</p><section class="fg-cue" id="form-cue" hidden><div class="fg-cue-top"><span class="fg-flag fg-flag-fault"><span class="fg-flag-sq" aria-hidden="true"></span><span id="form-cue-joint">Elbow swing</span></span><span class="fg-cue-meta" id="form-cue-meta"></span></div><p class="fg-cue-cue" id="form-cue-cue">Pin your elbow.</p><p class="fg-cue-fix" id="form-cue-fix">Keep your upper arm still at your side.</p></section><div class="fg-reps" id="form-reps" hidden></div></div>
+  <div class="readouts"><div class="fg-reading"><span class="fg-label">Elbow flexion</span><span><span class="fg-reading-value" id="live-elbow">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note">Peak <span id="live-peak">0</span>&deg;</span></div><div class="fg-reading"><span class="fg-label">Upper arm</span><span><span class="fg-reading-value" id="live-upper">0</span><span class="fg-reading-unit">&deg;</span></span><span class="fg-reading-note" id="live-upper-note">from vertical</span></div></div>
+  <p class="replay-phase" id="replay-phase">Recorded sensor data</p>
+</div>
+<script type="module" src="js/replay.js"></script>
+</body>
+</html>

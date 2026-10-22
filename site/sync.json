@@ -1,0 +1,66 @@
+{
+  "model": "yolo11n-pose.pt",
+  "sessions": {
+    "clean": {
+      "video": "clean-curl.mp4",
+      "recording": "formguard_upper+forearm_clean-nidula_20261021-081458.json",
+      "pose": {
+        "side": "right",
+        "fps": 29.977322,
+        "valid_pose_fraction": 0.9972,
+        "mean_keypoint_confidence": 0.9773,
+        "sampled_frames": 353,
+        "video_duration_seconds": 70.453,
+        "first_curl_refinement_fps": 29.977322,
+        "first_curl_refinement_frame_interval_ms": 33.359,
+        "first_curl_refinement_sampled_frames": 1349
+      },
+      "scale_seconds_per_video_second": 0.965735,
+      "offset_seconds": -26.416726,
+      "calibration_start_video_seconds": 0.13343420015760443,
+      "calibration_end_video_seconds": 5.637594956658787,
+      "calibration_peak_shoulder_raise_degrees": 98.9883019677311,
+      "exercise_start_video_seconds": 27.354011032308907,
+      "correlation": -0.9375,
+      "quality": 0.7813,
+      "video_overlap_fraction": 0.6981,
+      "sensor_overlap_fraction": 0.9949,
+      "method": "yolo-pose-correlation",
+      "sensor_duration_seconds": 35.941199999809264,
+      "first_curl_start_video_seconds": 17.012860520094563,
+      "third_curl_start_video_seconds": 27.354011032308907,
+      "playback_start_video_seconds": 27.354011032308907,
+      "first_three_curl_starts_video_seconds": [
+        17.012860520094563,
+        22.550379826635147,
+        27.354011032308907
+      ],
+      "manual_offset_adjustment_seconds": -2.24,
+      "alignment_anchor": "third curl to first IMU sample"
+    },
+    "swing": {
+      "video": "elbow-swing.mp4",
+      "recording": "formguard_upper+forearm_wong-swing-arm-nidula_20261021-081551.json",
+      "pose": {
+        "side": "right",
+        "fps": 29.961588,
+        "valid_pose_fraction": 1.0,
+        "mean_keypoint_confidence": 0.985,
+        "sampled_frames": 130,
+        "video_duration_seconds": 25.833
+      },
+      "scale_seconds_per_video_second": 0.98868,
+      "offset_seconds": -0.32,
+      "calibration_start_video_seconds": 0.0,
+      "calibration_end_video_seconds": 0.0,
+      "calibration_peak_shoulder_raise_degrees": 0.0,
+      "exercise_start_video_seconds": 0.0,
+      "correlation": 0.9396,
+      "quality": 0.915,
+      "video_overlap_fraction": 0.9535,
+      "sensor_overlap_fraction": 0.9946,
+      "method": "yolo-pose-correlation",
+      "sensor_duration_seconds": 24.483799999952318
+    }
+  }
+}
