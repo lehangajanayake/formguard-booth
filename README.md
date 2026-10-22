@@ -6,7 +6,7 @@
 
 FormGuard helps lifters understand their lifting form. Small motion sensors strapped to the arm stream to a web app that shows movement in 3D and surfaces elbow motion during bicep curls.
 
-The standalone project site is in [`site/`](site/). It includes a replay of the recorded booth sessions, a hardware overview and the custom sensor enclosure. The live sensor app remains in [`frontend/`](frontend/).
+The standalone project site is in [`site/`](site/). [Watch the demo](https://formguard-booth-demo-report.vercel.app) to see the recorded booth sessions, hardware overview and custom sensor enclosure. The live sensor app remains in [`frontend/`](frontend/).
 
 The booth videos are in `site/media/` as `clean-curl.mp4` and `elbow-swing.mp4`; the project page synchronizes them with the clean curl and swinging arm sensor recordings. Session recordings under `data/` are included in `site/recordings/` for replay and downloads.
 
